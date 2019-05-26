@@ -1,6 +1,7 @@
 import { mat4 } from "gl-matrix";
 import { Model } from "./model";
 import { Shader, initShaderProgram } from "./shader";
+import { Camera } from "./camera";
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -26,22 +27,8 @@ void main(void) {
 `;
 
 
-class Camera {
-  projectionMatrix: mat4;
-
-  constructor(w: number, h: number) {
-    const fieldOfView = (45 * Math.PI) / 180; // in radians
-    const aspect = w / h;
-    const zNear = 0.1;
-    const zFar = 100.0;
-    this.projectionMatrix = mat4.create();
-    // note: glmatrix.js always has the first argument
-    // as the destination to receive the result.
-    mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
-  }
-}
-
-function drawScene(gl: WebGLRenderingContext, shader: Shader, camera: Camera, model: Model) {
+function drawScene(gl: WebGLRenderingContext,
+  shader: Shader, camera: Camera, model: Model) {
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
   gl.depthFunc(gl.LEQUAL); // Near things obscure far things
 
@@ -68,42 +55,59 @@ function drawScene(gl: WebGLRenderingContext, shader: Shader, camera: Camera, mo
   model.draw(gl, shader.vertexPosition, shader.colorPosition);
 }
 
-function main() {
-  console.log("main");
-  const canvas = <HTMLCanvasElement>document.querySelector("#glCanvas");
-  if (canvas === null) {
-    console.log("no canvas");
-    return;
+class Scene {
+
+  then = 0;
+  gl: WebGLRenderingContext;
+  camera: Camera;
+  model: Model;
+  shader: Shader;
+
+  constructor(gl: WebGLRenderingContext) {
+    this.gl = gl;
+    // setup scene
+    this.camera = new Camera(this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+
+    this.model = new Model(this.gl);
+    this.model.setPositions(this.gl, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
+    this.model.setColors(this.gl, [
+      1.0, 1.0, 1.0, 1.0,    // white
+      1.0, 0.0, 0.0, 1.0,    // red
+      0.0, 1.0, 0.0, 1.0,    // green
+      0.0, 0.0, 1.0, 1.0,    // blue
+    ]);
+
+    this.shader = initShaderProgram(this.gl, vsSource, fsSource);
   }
-  console.log(canvas);
 
-  // Initialize the GL context
-  const gl = canvas.getContext("webgl");
-  // Only continue if WebGL is available and working
-  if (gl === null) {
-    console.error(
-      "Unable to initialize WebGL. Your browser or machine may not support it."
-    );
-    return;
+  onFrame(now: number) {
+    const deltaTime = now - this.then;
+    this.then = now;
+
+    this.model.update(deltaTime);
+
+    drawScene(this.gl, this.shader, this.camera, this.model);
   }
-  console.log(gl);
-
-  const shader = initShaderProgram(gl, vsSource, fsSource);
-
-  const model = new Model(gl);
-  model.setPositions(gl, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
-  model.setColors(gl, [
-    1.0, 1.0, 1.0, 1.0,    // white
-    1.0, 0.0, 0.0, 1.0,    // red
-    0.0, 1.0, 0.0, 1.0,    // green
-    0.0, 0.0, 1.0, 1.0,    // blue
-  ]);
-
-  const camera = new Camera(gl.canvas.clientWidth, gl.canvas.clientHeight);
-
-  drawScene(gl, shader, camera, model);
 }
 
 window.onload = function (e) {
-  main();
+  const canvas = <HTMLCanvasElement>document.querySelector("#glCanvas");
+  if (!canvas) {
+    throw ("no canvas");
+  }
+
+  const gl = canvas.getContext("webgl")!;
+  if (!gl) {
+    throw (
+      "Unable to initialize WebGL. Your browser or machine may not support it."
+    );
+  }
+
+  const scene = new Scene(gl);
+  function render(now: number) {
+    scene.onFrame(now * 0.001);
+    requestAnimationFrame(render)
+  }
+
+  requestAnimationFrame(render)
 };

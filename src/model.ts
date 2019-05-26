@@ -4,6 +4,7 @@ export class Model {
   positionBuffer: WebGLBuffer;
   colorBuffer: WebGLBuffer;
   modelViewMatrix: mat4;
+  squareRotation = 0;
 
   constructor(gl: WebGLRenderingContext) {
     this.positionBuffer = gl.createBuffer()!;
@@ -17,6 +18,15 @@ export class Model {
       this.modelViewMatrix, // matrix to translate
       [-0.0, 0.0, -6.0]
     ); // amount to translate
+
+  }
+
+  update(deltaTime: number) {
+    this.squareRotation = deltaTime;
+    mat4.rotate(this.modelViewMatrix,  // destination matrix
+      this.modelViewMatrix,  // matrix to rotate
+      this.squareRotation,   // amount to rotate in radians
+      [0, 0, 1]);       // axis to rotate around
   }
 
   setPositions(gl: WebGLRenderingContext, positions: number[]) {
@@ -30,7 +40,6 @@ export class Model {
   }
 
   draw(gl: WebGLRenderingContext, positionLocation: number, colorLocation: number) {
-    console.log("draw model");
 
     {
       const numComponents = 2; // pull out 2 values per iteration

@@ -7,6 +7,7 @@ module.exports = {
         filename: 'main.js',
         path: path.join(__dirname, 'public') // absolute path
     },
+    devtool: 'inline-source-map',
 
     module: {
         rules: [{

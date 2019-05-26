@@ -1,8 +1,20 @@
+import { mat4 } from 'gl-matrix'
+
 export class Model {
   positionBuffer: WebGLBuffer;
+  modelViewMatrix: mat4;
 
   constructor(gl: WebGLRenderingContext) {
     this.positionBuffer = gl.createBuffer()!;
+
+    // Set the drawing position to the "identity" point, which is
+    // the center of the scene.
+    this.modelViewMatrix = mat4.create();
+    mat4.translate(
+      this.modelViewMatrix, // destination matrix
+      this.modelViewMatrix, // matrix to translate
+      [-0.0, 0.0, -6.0]
+    ); // amount to translate
   }
 
   setPositions(gl: WebGLRenderingContext, positions: number[]) {

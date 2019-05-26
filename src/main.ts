@@ -83,32 +83,46 @@ function initShaderProgram(
   return shaderProgram;
 }
 
-function initBuffers(gl: WebGLRenderingContext) {
-  // Create a buffer for the square's positions.
+class Model {
+  positionBuffer: WebGLBuffer;
 
-  const positionBuffer = gl.createBuffer();
+  constructor(gl: WebGLRenderingContext) {
+    this.positionBuffer = gl.createBuffer()!;
+  }
 
-  // Select the positionBuffer as the one to apply buffer
-  // operations to from here out.
+  setPositions(gl: WebGLRenderingContext, positions: number[]) {
+    // Select the positionBuffer as the one to apply buffer
+    // operations to from here out.
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  }
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  draw(gl: WebGLRenderingContext, positionAttr: number) {
+    console.log("draw model");
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
 
-  // Now create an array of positions for the square.
+    const numComponents = 2; // pull out 2 values per iteration
+    const type = gl.FLOAT; // the data in the buffer is 32bit floats
+    const normalize = false; // don't normalize
+    const stride = 0; // how many bytes to get from one set of values to the next
+    // 0 = use type and numComponents above
+    const offset = 0; // how many bytes inside the buffer to start from
+    gl.vertexAttribPointer(
+      positionAttr,
+      numComponents,
+      type,
+      normalize,
+      stride,
+      offset
+    );
+    gl.enableVertexAttribArray(positionAttr);
 
-  const positions = [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0];
-
-  // Now pass the list of positions into WebGL to build the
-  // shape. We do this by creating a Float32Array from the
-  // JavaScript array, then use it to fill the current buffer.
-
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-  return {
-    position: positionBuffer
-  };
+    const vertexCount = 4;
+    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+  }
 }
 
-function drawScene(gl: WebGLRenderingContext, programInfo: any, buffers: any) {
+function drawScene(gl: WebGLRenderingContext, programInfo: any, model: Model) {
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -148,27 +162,6 @@ function drawScene(gl: WebGLRenderingContext, programInfo: any, buffers: any) {
     [-0.0, 0.0, -6.0]
   ); // amount to translate
 
-  // Tell WebGL how to pull out the positions from the position
-  // buffer into the vertexPosition attribute.
-  {
-    const numComponents = 2; // pull out 2 values per iteration
-    const type = gl.FLOAT; // the data in the buffer is 32bit floats
-    const normalize = false; // don't normalize
-    const stride = 0; // how many bytes to get from one set of values to the next
-    // 0 = use type and numComponents above
-    const offset = 0; // how many bytes inside the buffer to start from
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-    gl.vertexAttribPointer(
-      programInfo.attribLocations.vertexPosition,
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset
-    );
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-  }
-
   // Tell WebGL to use our program when drawing
 
   gl.useProgram(programInfo.program);
@@ -186,11 +179,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: any, buffers: any) {
     modelViewMatrix
   );
 
-  {
-    const offset = 0;
-    const vertexCount = 4;
-    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-  }
+  model.draw(gl, programInfo.attribLocations.vertexPosition);
 }
 
 function main() {
@@ -231,9 +220,10 @@ function main() {
     }
   };
 
-  const buffers = initBuffers(gl);
+  const model = new Model(gl);
+  model.setPositions(gl, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
 
-  drawScene(gl, programInfo, buffers);
+  drawScene(gl, programInfo, model);
 }
 
 main();

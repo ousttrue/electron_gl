@@ -4,18 +4,24 @@ import { Shader, initShaderProgram } from "./shader";
 
 const vsSource = `
 attribute vec4 aVertexPosition;
+attribute vec4 aColorPosition;
+
+varying lowp vec4 vColor;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 
 void main() {
   gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+  vColor = aColorPosition;
 }
 `;
 
 const fsSource = `
-void main() {
-  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+varying lowp vec4 vColor;
+
+void main(void) {
+  gl_FragColor = vColor;
 }
 `;
 
@@ -59,7 +65,7 @@ function drawScene(gl: WebGLRenderingContext, shader: Shader, camera: Camera, mo
     model.modelViewMatrix
   );
 
-  model.draw(gl, shader.vertexPosition);
+  model.draw(gl, shader.vertexPosition, shader.colorPosition);
 }
 
 function main() {
@@ -86,6 +92,12 @@ function main() {
 
   const model = new Model(gl);
   model.setPositions(gl, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
+  model.setColors(gl, [
+    1.0, 1.0, 1.0, 1.0,    // white
+    1.0, 0.0, 0.0, 1.0,    // red
+    0.0, 1.0, 0.0, 1.0,    // green
+    0.0, 0.0, 1.0, 1.0,    // blue
+  ]);
 
   const camera = new Camera(gl.canvas.clientWidth, gl.canvas.clientHeight);
 

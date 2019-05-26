@@ -2,6 +2,7 @@ import { mat4 } from "gl-matrix";
 import { Model } from "./model";
 import { Shader, initShaderProgram } from "./shader";
 import { Camera } from "./camera";
+import *  as cube from "./cube";
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -69,13 +70,7 @@ class Scene {
     this.camera = new Camera(this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
 
     this.model = new Model(this.gl);
-    this.model.setPositions(this.gl, [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0]);
-    this.model.setColors(this.gl, [
-      1.0, 1.0, 1.0, 1.0,    // white
-      1.0, 0.0, 0.0, 1.0,    // red
-      0.0, 1.0, 0.0, 1.0,    // green
-      0.0, 0.0, 1.0, 1.0,    // blue
-    ]);
+    this.model.setData(this.gl, cube);
 
     this.shader = initShaderProgram(this.gl, vsSource, fsSource);
   }

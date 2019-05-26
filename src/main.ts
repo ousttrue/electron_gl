@@ -63,6 +63,7 @@ function drawScene(gl: WebGLRenderingContext, shader: Shader, camera: Camera, mo
 }
 
 function main() {
+  console.log("main");
   const canvas = <HTMLCanvasElement>document.querySelector("#glCanvas");
   if (canvas === null) {
     console.log("no canvas");
@@ -91,4 +92,6 @@ function main() {
   drawScene(gl, shader, camera, model);
 }
 
-main();
+window.onload = function (e) {
+  main();
+};

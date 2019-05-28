@@ -89,71 +89,97 @@ function isPowerOf2(value: number): boolean {
   return (value & (value - 1)) == 0;
 }
 
-function drawScene(gl: WebGLRenderingContext,
-  shader: Shader, camera: Camera, model: Model, texture: WebGLTexture) {
-  gl.enable(gl.DEPTH_TEST); // Enable depth testing
-  gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-
-  // clear
-  gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-  gl.clearDepth(1.0); // Clear everything
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  // setup pipeline
-  shader.use(gl);
-
-  gl.uniformMatrix4fv(
-    shader.projectionMatrix,
-    false,
-    camera.projectionMatrix
-  );
-
-  gl.uniformMatrix4fv(
-    shader.modelViewMatrix,
-    false,
-    model.modelViewMatrix
-  );
-
-  // Tell WebGL we want to affect texture unit 0
-  gl.activeTexture(gl.TEXTURE0);
-  // Bind the texture to texture unit 0
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  // Tell the shader we bound the texture to texture unit 0
-  gl.uniform1i(shader.uSampler, 0);
-
-  model.draw(gl, shader.vertexPosition, shader.colorPosition, shader.textureCoord);
-}
 
 class Scene {
 
-  then = 0;
-  gl: WebGLRenderingContext;
   camera: Camera;
   model: Model;
   shader: Shader;
   texture: WebGLTexture;
 
   constructor(gl: WebGLRenderingContext) {
-    this.gl = gl;
     // setup scene
-    this.camera = new Camera(this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+    this.camera = new Camera();
+    this.camera.setScreenSize(gl.canvas.clientWidth, gl.canvas.clientHeight);
 
-    this.model = new Model(this.gl);
-    this.model.setData(this.gl, cube);
+    this.model = new Model(gl);
+    this.model.setData(gl, cube);
 
-    this.shader = initShaderProgram(this.gl, vsSource, fsSource);
+    this.shader = initShaderProgram(gl, vsSource, fsSource);
 
     //this.texture = loadTexture(gl, 'cubetexture.png');
     this.texture = loadTexture(gl, 'https://mdn.github.io/webgl-examples/tutorial/sample6/cubetexture.png');
   }
 
-  onFrame(now: number) {
-    const deltaTime = now - this.then;
-    this.then = now;
+  resize(w: number, h: number) {
+    this.camera.setScreenSize(w, h);
+  }
 
+  update(deltaTime: number) {
     this.model.update(deltaTime);
+  }
 
-    drawScene(this.gl, this.shader, this.camera, this.model, this.texture);
+  draw(gl: WebGLRenderingContext) {
+    gl.enable(gl.DEPTH_TEST); // Enable depth testing
+    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+
+    // clear
+    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+    gl.clearDepth(1.0); // Clear everything
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // setup pipeline
+    this.shader.use(gl);
+
+    gl.uniformMatrix4fv(
+      this.shader.projectionMatrix,
+      false,
+      this.camera.projectionMatrix
+    );
+
+    gl.uniformMatrix4fv(
+      this.shader.modelViewMatrix,
+      false,
+      this.model.modelViewMatrix
+    );
+
+    // Tell WebGL we want to affect texture unit 0
+    gl.activeTexture(gl.TEXTURE0);
+    // Bind the texture to texture unit 0
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    // Tell the shader we bound the texture to texture unit 0
+    gl.uniform1i(this.shader.uSampler, 0);
+
+    this.model.draw(gl, this.shader.vertexPosition, this.shader.colorPosition, this.shader.textureCoord);
+  }
+}
+
+class Renderer {
+  gl: WebGLRenderingContext;
+  scene: Scene;
+  last = 0;
+
+  constructor(gl: WebGLRenderingContext) {
+    this.gl = gl;
+    this.scene = new Scene(gl);
+  }
+
+  resize(w: number, h: number) {
+    this.scene.resize(this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+  }
+
+  onFrame(nowSeconds: number) {
+    const deltaTime = nowSeconds - this.last;
+    this.last = nowSeconds;
+    this.scene.update(deltaTime);
+    this.scene.draw(this.gl);
+  }
+}
+let renderer: Renderer;
+
+window.onresize = function (e) {
+  if (renderer) {
+    renderer.resize(window.innerWidth, window.innerHeight);
   }
 }
 
@@ -170,11 +196,12 @@ window.onload = function (e) {
     );
   }
 
-  const scene = new Scene(gl);
+  renderer = new Renderer(gl);
+  renderer.resize(window.innerWidth, window.innerHeight);
+
   function render(now: number) {
-    scene.onFrame(now * 0.001);
+    renderer.onFrame(now * 0.001);
     requestAnimationFrame(render)
   }
-
   requestAnimationFrame(render)
 };

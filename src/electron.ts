@@ -1,13 +1,17 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, WebContents } from "electron";
 import * as path from "path";
+import fetch from 'node-fetch';
+import { resolveNaptr } from "dns";
+
 
 let mainWindow: BrowserWindow | null;
 
-function createWindow() {
+async function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
+    webPreferences: { nodeIntegration: true }
   });
 
   // and load the index.html of the app.
@@ -23,6 +27,14 @@ function createWindow() {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  const url = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
+  try {
+    await load(mainWindow, url);
+
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 // This method will be called when Electron has finished
@@ -47,5 +59,14 @@ app.on("activate", () => {
   }
 });
 
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
+async function load(mainWindow: BrowserWindow, url: string) {
+  const response = await fetch(url);
+  const body = await response.buffer();
+  //const json = await response.json();
+  //console.log(response);
+
+  mainWindow.webContents.send("load", {
+    url: url,
+    data: body
+  });
+}

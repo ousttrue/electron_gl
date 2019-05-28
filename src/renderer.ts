@@ -1,8 +1,10 @@
+import { ipcRenderer } from 'electron'
 import { mat4 } from "gl-matrix";
 import { Model } from "./model";
 import { Shader, initShaderProgram } from "./shader";
 import { Camera } from "./camera";
 import *  as cube from "./cube";
+
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -162,6 +164,13 @@ class Renderer {
   constructor(gl: WebGLRenderingContext) {
     this.gl = gl;
     this.scene = new Scene(gl);
+
+    ipcRenderer.on('load', function (event: Electron.Event, arg: any) {
+
+      console.log(arg);
+    
+    });
+ 
   }
 
   resize(w: number, h: number) {
@@ -196,7 +205,7 @@ window.onload = function (e) {
     );
   }
 
-  renderer = new Renderer(gl);
+  renderer = new Renderer(gl);   
   renderer.resize(window.innerWidth, window.innerHeight);
 
   function render(now: number) {

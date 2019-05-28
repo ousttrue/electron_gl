@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@types/gl-matrix": "^2.4.5",
-    "gl-matrix": "^3.0.0"
+    "gl-matrix": "^3.0.0",
+    "@types/node-fetch": "^2.3.4",
+    "node-fetch": "^2.6.0"
   }
 }

@@ -35,6 +35,26 @@ void main(void) {
 `;
 
 
+function resizeCanvas(canvas: HTMLCanvasElement): boolean {
+  // Lookup the size the browser is displaying the canvas.
+  var displayWidth = canvas.clientWidth;
+  var displayHeight = canvas.clientHeight;
+
+  // Check if the canvas is not the same size.
+  if (canvas.width != displayWidth ||
+    canvas.height != displayHeight) {
+
+    // Make the canvas the same size
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
 //
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
@@ -129,6 +149,10 @@ class Scene {
     gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (resizeCanvas(gl.canvas)) {
+      this.camera.setScreenSize(gl.canvas.width, gl.canvas.height);
+    }
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     // setup pipeline
     this.shader.use(gl);
@@ -168,13 +192,9 @@ class Renderer {
     ipcRenderer.on('load', function (event: Electron.Event, arg: any) {
 
       console.log(arg);
-    
-    });
- 
-  }
 
-  resize(w: number, h: number) {
-    this.scene.resize(this.gl.canvas.clientWidth, this.gl.canvas.clientHeight);
+    });
+
   }
 
   onFrame(nowSeconds: number) {
@@ -186,11 +206,6 @@ class Renderer {
 }
 let renderer: Renderer;
 
-window.onresize = function (e) {
-  if (renderer) {
-    renderer.resize(window.innerWidth, window.innerHeight);
-  }
-}
 
 window.onload = function (e) {
   const canvas = <HTMLCanvasElement>document.querySelector("#glCanvas");
@@ -205,8 +220,7 @@ window.onload = function (e) {
     );
   }
 
-  renderer = new Renderer(gl);   
-  renderer.resize(window.innerWidth, window.innerHeight);
+  renderer = new Renderer(gl);
 
   function render(now: number) {
     renderer.onFrame(now * 0.001);

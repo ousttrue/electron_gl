@@ -4,6 +4,7 @@ import { Model } from "./model";
 import { Shader, initShaderProgram } from "./shader";
 import { Camera } from "./camera";
 import *  as cube from "./cube";
+import { RPC } from './rpc';
 
 
 const vsSource = `
@@ -184,17 +185,25 @@ class Renderer {
   gl: WebGLRenderingContext;
   scene: Scene;
   last = 0;
+  rpc = new RPC();
 
   constructor(gl: WebGLRenderingContext) {
     this.gl = gl;
     this.scene = new Scene(gl);
-
-    ipcRenderer.on('load', function (event: Electron.Event, arg: any) {
-
-      console.log(arg);
-
+    ipcRenderer.on('rpc', async (e: Electron.Event, value: any) => {
+      const response = await this.rpc.dispatchAsync(value);
+      if (response) {
+        e.sender.send('rpc', response);
+      }
     });
+    this.startAsync();
+  }
 
+  async startAsync() {
+    const request = this.rpc.createRequest('getDefaultModel');
+    ipcRenderer.send('rpc', request[0]);
+    const model = await request[1];
+    console.log(model);
   }
 
   onFrame(nowSeconds: number) {

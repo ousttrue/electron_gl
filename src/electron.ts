@@ -1,10 +1,30 @@
-import { app, BrowserWindow, ipcMain, WebContents } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 import fetch from 'node-fetch';
-import { resolveNaptr } from "dns";
+import { RPC } from "./rpc";
 
 
 let mainWindow: BrowserWindow | null;
+
+const rpc = new RPC();
+ipcMain.on('rpc', async (e: Electron.Event, value: any) => {
+  const response = await rpc.dispatchAsync(value);
+  if (response) {
+    e.sender.send('rpc', response);
+  }
+});
+
+rpc.methodMap['getDefaultModel'] = async function () {
+  console.log('getDefaultModel')
+  const url = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
+  const response = await fetch(url);
+  const body = await response.buffer();
+  console.log('loaded');
+  return {
+    url: url,
+    data: body
+  };
+}
 
 async function createWindow() {
   // Create the browser window.
@@ -27,14 +47,6 @@ async function createWindow() {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
-
-  const url = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
-  try {
-    await load(mainWindow, url);
-
-  } catch (error) {
-    console.log(error);
-  }
 }
 
 // This method will be called when Electron has finished
@@ -58,15 +70,3 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
-async function load(mainWindow: BrowserWindow, url: string) {
-  const response = await fetch(url);
-  const body = await response.buffer();
-  //const json = await response.json();
-  //console.log(response);
-
-  mainWindow.webContents.send("load", {
-    url: url,
-    data: body
-  });
-}

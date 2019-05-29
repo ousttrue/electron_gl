@@ -5,7 +5,8 @@ import { Shader, initShaderProgram } from "./shader";
 import { Camera } from "./camera";
 import *  as cube from "./cube";
 import { RPC } from './rpc';
-
+import { parseGlb } from "./glb";
+import * as interfaces from "./interfaces";
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -202,8 +203,10 @@ class Renderer {
   async startAsync() {
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
-    const model = await request[1];
-    console.log(model);
+    const model: Uint8Array = await request[1];
+    console.log(typeof(model), model);
+    const [json, bin] = parseGlb(new DataView(model.buffer));
+    console.log(json);
   }
 
   onFrame(nowSeconds: number) {

@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 import fetch from 'node-fetch';
 import { RPC } from "./rpc";
-
+import * as interfaces from "./interfaces";
+import * as glb from "./glb";
 
 let mainWindow: BrowserWindow | null;
 
@@ -14,16 +15,14 @@ ipcMain.on('rpc', async (e: Electron.Event, value: any) => {
   }
 });
 
-rpc.methodMap['getDefaultModel'] = async function () {
+rpc.methodMap['getDefaultModel'] = async function (): Promise<Buffer> {
   console.log('getDefaultModel')
   const url = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
   const response = await fetch(url);
   const body = await response.buffer();
-  console.log('loaded');
-  return {
-    url: url,
-    data: body
-  };
+  console.log(typeof(body));
+
+  return body;
 }
 
 async function createWindow() {

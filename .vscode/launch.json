@@ -10,6 +10,9 @@
             "name": "Electron Main",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
             "program": "${workspaceFolder}/public/electron.js",
+            "env": {
+                "ELECTRON_ENABLE_LOGGING": "1",
+            },
             "preLaunchTask": "build"
         },
         {

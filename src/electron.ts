@@ -15,14 +15,17 @@ ipcMain.on('rpc', async (e: Electron.Event, value: any) => {
   }
 });
 
-rpc.methodMap['getDefaultModel'] = async function (): Promise<Buffer> {
+rpc.methodMap['getDefaultModel'] = async function (): Promise<interfaces.Model> {
   console.log('getDefaultModel')
   const url = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
   const response = await fetch(url);
   const body = await response.buffer();
-  console.log(typeof(body));
+  console.log(typeof (body));
 
-  return body;
+  return {
+    url: url,
+    data: body,
+  };
 }
 
 async function createWindow() {

@@ -1,5 +1,7 @@
 /// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
 
+import { Gltf } from "./gltf"
+
 
 interface Chunk {
     type: number;
@@ -13,7 +15,7 @@ function readChunk(view: DataView, pos: number): [Chunk, number] {
     return [{ type: chunkType, body: body }, pos + length];
 }
 
-export function parseGlb(view: DataView): [string, Uint8Array] {
+export function parseGlb(view: DataView): [Gltf, Uint8Array] {
     let pos = 0;
 
     const magic = view.getUint32(pos, true); pos += 4;
@@ -40,5 +42,7 @@ export function parseGlb(view: DataView): [string, Uint8Array] {
         throw new Error('second chunk is not BIN');
     }
 
-    return [new TextDecoder("utf-8").decode(firstChunk.body), secondChunk.body];
+    const json = new TextDecoder("utf-8").decode(firstChunk.body);
+
+    return [JSON.parse(json), secondChunk.body];
 }

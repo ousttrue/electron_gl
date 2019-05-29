@@ -1,5 +1,4 @@
-export interface Model
-{
+export interface Model {
     url: string;
-    data: ArrayBuffer;
+    data: Buffer;
 }

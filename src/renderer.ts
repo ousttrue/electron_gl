@@ -7,6 +7,7 @@ import *  as cube from "./cube";
 import { RPC } from './rpc';
 import { parseGlb } from "./glb";
 import * as interfaces from "./interfaces";
+import * as gltf from "./gltf";
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -203,10 +204,10 @@ class Renderer {
   async startAsync() {
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
-    const model: Uint8Array = await request[1];
-    console.log(typeof(model), model);
-    const [json, bin] = parseGlb(new DataView(model.buffer));
-    console.log(json);
+    const model: interfaces.Model = await request[1];
+    const [json, bin] = parseGlb(new DataView(model.data.buffer));
+    const mesh = json.meshes[0];
+    console.log(mesh.primitives);
   }
 
   onFrame(nowSeconds: number) {

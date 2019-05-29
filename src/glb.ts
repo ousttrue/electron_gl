@@ -15,7 +15,7 @@ function readChunk(view: DataView, pos: number): [Chunk, number] {
     return [{ type: chunkType, body: body }, pos + length];
 }
 
-export function parseGlb(view: DataView): [Gltf, Uint8Array] {
+export function parseGlb(view: DataView): [Uint8Array, Uint8Array] {
     let pos = 0;
 
     const magic = view.getUint32(pos, true); pos += 4;
@@ -42,7 +42,5 @@ export function parseGlb(view: DataView): [Gltf, Uint8Array] {
         throw new Error('second chunk is not BIN');
     }
 
-    const json = new TextDecoder("utf-8").decode(firstChunk.body);
-
-    return [JSON.parse(json), secondChunk.body];
+    return [firstChunk.body, secondChunk.body];
 }

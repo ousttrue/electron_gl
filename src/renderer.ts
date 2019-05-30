@@ -205,7 +205,8 @@ class Renderer {
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
     const model: interfaces.Model = await request[1];
-    const [json, bin] = parseGlb(new DataView(model.data.buffer));
+    const [gltf_bin, bin] = parseGlb(new DataView(model.data.buffer));
+    const json = <gltf.Gltf>JSON.parse(new TextDecoder('utf-8').decode(gltf_bin));
     const mesh = json.meshes[0];
     console.log(mesh.primitives);
   }
@@ -226,7 +227,7 @@ window.onload = function (e) {
     throw ("no canvas");
   }
 
-  const gl = canvas.getContext("webgl")!;
+  const gl = <WebGLRenderingContext>canvas.getContext("webgl2")!;
   if (!gl) {
     throw (
       "Unable to initialize WebGL. Your browser or machine may not support it."

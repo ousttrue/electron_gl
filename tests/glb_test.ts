@@ -26,9 +26,16 @@ describe('glb parser', () => {
 
         const primitive = mesh.primitives[0];
         assert.equal(gltf_value.accessors.length, 4); // pos, normal, uv + index
+        assert.equal(gltf_value.bufferViews.length, 4); // pos, normal, uv + index
+        assert.equal(gltf_value.buffers.length, 1); // pos, normal, uv + index
 
         const index_accessor = gltf_value.accessors[0];
         assert.equal(index_accessor.componentType, gltf.ComponentType.UNSIGNED_SHORT);
         assert.equal(index_accessor.type, gltf.ValueType.SCALAR);
+
+        const buffer_view = gltf_value.bufferViews[0];
+
+        const buffer = gltf_value.buffers[0];
+        assert.equal(buffer.byteLength, 118342);
     });
 })

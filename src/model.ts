@@ -1,21 +1,84 @@
 import { mat4 } from 'gl-matrix'
+import { Model } from './interfaces'
 
-export class Model {
-  positionBuffer: WebGLBuffer;
-  colorBuffer: WebGLBuffer;
-  textureCoordBuffer: WebGLBuffer;
-  indexBuffer: WebGLBuffer;
+export class VBO {
+  vbo: WebGLBuffer;
+  bufferType: number = 0;
+  elementType: number = 0;
+  elementCount: number = 0;
+
+  count: number = 0;
+
+  constructor(gl: WebGL2RenderingContext) {
+    this.vbo = gl.createBuffer()!;
+  }
+
+  setup(gl: WebGL2RenderingContext, location: number) {
+    const stride = 0; // how many bytes to get from one set of values to the next
+    const offset = 0; // how many bytes inside the buffer to start from
+
+    gl.bindBuffer(this.bufferType, this.vbo);
+    gl.vertexAttribPointer(
+      location,
+      this.elementCount,
+      this.elementType,
+      false,
+      stride,
+      offset
+    );
+  }
+
+  drawElements(gl: WebGL2RenderingContext) {
+    gl.bindBuffer(this.bufferType, this.vbo);
+    gl.drawElements(gl.TRIANGLES, this.count, this.elementType, 0);
+  }
+
+  // float2, 3, 4
+  setData(gl: WebGL2RenderingContext, elementCount: number, values: number[]) {
+    this.count = values.length / elementCount;
+    this.bufferType = gl.ARRAY_BUFFER;
+    this.elementType = gl.FLOAT;
+    this.elementCount = elementCount;
+    gl.bindBuffer(this.bufferType, this.vbo);
+    gl.bufferData(this.bufferType, new Float32Array(values), gl.STATIC_DRAW);
+  }
+
+  // short[] or int[]
+  setIndexData(gl: WebGL2RenderingContext, elementType: number, values: number[]) {
+    this.count = values.length;
+    this.bufferType = gl.ELEMENT_ARRAY_BUFFER;
+    this.elementType = elementType;
+    this.elementCount = 1;
+    gl.bindBuffer(this.bufferType, this.vbo);
+    switch (this.elementType) {
+      case gl.UNSIGNED_SHORT:
+        gl.bufferData(this.bufferType,
+          new Uint16Array(values), gl.STATIC_DRAW);
+        break;
+
+      case gl.UNSIGNED_INT:
+        gl.bufferData(this.bufferType,
+          new Uint32Array(values), gl.STATIC_DRAW);
+        break;
+
+      default:
+        throw new Error('invalid element type: ');
+    }
+  }
+}
+
+export class VAO {
+  //vao: WebGLVertexArrayObject;
+
+  indexBuffer?: VBO;
+  vertexAttributes: { [name: string]: VBO } = {};
+  //vertexCount = 0;
+
   modelViewMatrix: mat4;
   rotation = 0;
-  vertexCount = 0;
-  indexCount = 0;
-  indexType = 0;
 
-  constructor(gl: WebGLRenderingContext) {
-    this.indexBuffer = gl.createBuffer()!;
-    this.positionBuffer = gl.createBuffer()!;
-    this.colorBuffer = gl.createBuffer()!;
-    this.textureCoordBuffer = gl.createBuffer()!;
+  constructor(gl: WebGL2RenderingContext) {
+    //this.vao = gl.createVertexArray()!;
 
     // Set the drawing position to the "identity" point, which is
     // the center of the scene.
@@ -25,7 +88,6 @@ export class Model {
       this.modelViewMatrix, // matrix to translate
       [-0.0, 0.0, -6.0]
     ); // amount to translate
-
   }
 
   update(deltaTime: number) {
@@ -39,85 +101,28 @@ export class Model {
       this.rotation * .7, [0, 1, 0]);
   }
 
-  setData(gl: WebGLRenderingContext, data: any) {
-    this.vertexCount = data.positions.length / 3;
-    if (this.vertexCount != data.colors.length / 4) {
-      throw "different positions and colors";
+  setData(gl: WebGL2RenderingContext, model: Model) {
+    for (const name in model.vertices) {
+      const attr = model.vertices[name];
+      const vbo = new VBO(gl);
+      vbo.setData(gl, attr.elementCount, attr.values);
+      this.vertexAttributes[name] = vbo;
     }
 
-    // positions
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.positions), gl.STATIC_DRAW);
-
-    // uv
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.textureCoordinates), gl.STATIC_DRAW);
-
-    // colors
-    // gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.colors), gl.STATIC_DRAW);
-
-    // indices
-    this.indexType = gl.UNSIGNED_SHORT;
-    this.indexCount = data.indices.length;
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-      new Uint16Array(data.indices), gl.STATIC_DRAW);
-
+    this.indexBuffer = new VBO(gl);
+    this.indexBuffer.setIndexData(gl, gl.UNSIGNED_SHORT, model.indices);
   }
 
-  draw(gl: WebGLRenderingContext, positionLocation: number, colorLocation: number, uv: number) {
+  draw(gl: WebGL2RenderingContext, positionLocation: number, colorLocation: number, uv: number) {
 
-    {
-      const numComponents = 3; // pull out 2 values per iteration
-      const type = gl.FLOAT; // the data in the buffer is 32bit floats
-      const normalize = false; // don't normalize
-      const stride = 0; // how many bytes to get from one set of values to the next
-      const offset = 0; // how many bytes inside the buffer to start from
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-      gl.vertexAttribPointer(
-        positionLocation,
-        numComponents,
-        type,
-        normalize,
-        stride,
-        offset
-      );
-      gl.enableVertexAttribArray(positionLocation);
+    this.vertexAttributes['positions'].setup(gl, positionLocation);
+    gl.enableVertexAttribArray(positionLocation);
+
+    this.vertexAttributes['uv'].setup(gl, uv);
+    gl.enableVertexAttribArray(uv);
+
+    if (this.indexBuffer) {
+      this.indexBuffer.drawElements(gl);
     }
-
-    /*
-    {
-      const numComponents = 4;
-      const type = gl.FLOAT;
-      const normalize = false;
-      const stride = 0;
-      const offset = 0;
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-      gl.vertexAttribPointer(
-        colorLocation,
-        numComponents,
-        type,
-        normalize,
-        stride,
-        offset);
-      gl.enableVertexAttribArray(colorLocation);
-    }
-    */
-
-    // tell webgl how to pull out the texture coordinates from buffer
-    {
-      const num = 2; // every coordinate composed of 2 values
-      const type = gl.FLOAT; // the data in the buffer is 32 bit float
-      const normalize = false; // don't normalize
-      const stride = 0; // how many bytes to get from one set to the next
-      const offset = 0; // how many bytes inside the buffer to start from
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordBuffer);
-      gl.vertexAttribPointer(uv, num, type, normalize, stride, offset);
-      gl.enableVertexAttribArray(uv);
-    }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.drawElements(gl.TRIANGLES, this.indexCount, this.indexType, 0);
   }
 }

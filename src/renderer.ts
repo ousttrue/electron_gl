@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { mat4 } from "gl-matrix";
-import { Model } from "./model";
+import { VAO } from "./model";
 import { Shader, initShaderProgram } from "./shader";
 import { Camera } from "./camera";
 import *  as cube from "./cube";
@@ -62,7 +62,7 @@ function resizeCanvas(canvas: HTMLCanvasElement): boolean {
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
 //
-function loadTexture(gl: WebGLRenderingContext, url: string) {
+function loadTexture(gl: WebGL2RenderingContext, url: string) {
   const texture = gl.createTexture()!;
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -118,17 +118,17 @@ function isPowerOf2(value: number): boolean {
 class Scene {
 
   camera: Camera;
-  model: Model;
+  model: VAO;
   shader: Shader;
   texture: WebGLTexture;
 
-  constructor(gl: WebGLRenderingContext) {
+  constructor(gl: WebGL2RenderingContext) {
     // setup scene
     this.camera = new Camera();
     this.camera.setScreenSize(gl.canvas.clientWidth, gl.canvas.clientHeight);
 
-    this.model = new Model(gl);
-    this.model.setData(gl, cube);
+    this.model = new VAO(gl);
+    this.model.setData(gl, cube.model);
 
     this.shader = initShaderProgram(gl, vsSource, fsSource);
 
@@ -144,7 +144,7 @@ class Scene {
     this.model.update(deltaTime);
   }
 
-  draw(gl: WebGLRenderingContext) {
+  draw(gl: WebGL2RenderingContext) {
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
 
@@ -184,12 +184,12 @@ class Scene {
 }
 
 class Renderer {
-  gl: WebGLRenderingContext;
+  gl: WebGL2RenderingContext;
   scene: Scene;
   last = 0;
   rpc = new RPC();
 
-  constructor(gl: WebGLRenderingContext) {
+  constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.scene = new Scene(gl);
     ipcRenderer.on('rpc', async (e: Electron.Event, value: any) => {
@@ -204,11 +204,13 @@ class Renderer {
   async startAsync() {
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
-    const model: interfaces.Model = await request[1];
+    const model: interfaces.LoadModel = await request[1];
     const [gltf_bin, bin] = parseGlb(new DataView(model.data.buffer));
     const json = <gltf.Gltf>JSON.parse(new TextDecoder('utf-8').decode(gltf_bin));
-    const mesh = json.meshes[0];
-    console.log(mesh.primitives);
+
+    for (const mesh of json.meshes) {
+      console.log(mesh);
+    }
   }
 
   onFrame(nowSeconds: number) {
@@ -227,7 +229,7 @@ window.onload = function (e) {
     throw ("no canvas");
   }
 
-  const gl = <WebGLRenderingContext>canvas.getContext("webgl2")!;
+  const gl = <WebGL2RenderingContext>canvas.getContext("webgl2")!;
   if (!gl) {
     throw (
       "Unable to initialize WebGL. Your browser or machine may not support it."

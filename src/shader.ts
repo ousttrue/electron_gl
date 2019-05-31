@@ -1,15 +1,15 @@
 class ShaderLoader {
     vs: WebGLShader;
     fs: WebGLShader;
-    constructor(gl: WebGLRenderingContext) {
+    constructor(gl: WebGL2RenderingContext) {
         this.vs = gl.createShader(gl.VERTEX_SHADER)!;
         this.fs = gl.createShader(gl.FRAGMENT_SHADER)!;
     }
-    release(gl: WebGLRenderingContext) {
+    release(gl: WebGL2RenderingContext) {
         gl.deleteShader(this.vs);
         gl.deleteShader(this.fs);
     }
-    _loadShader(gl: WebGLRenderingContext, shader: WebGLShader, src: string) {
+    _loadShader(gl: WebGL2RenderingContext, shader: WebGLShader, src: string) {
         gl.shaderSource(shader, src);
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -18,15 +18,15 @@ class ShaderLoader {
         }
     }
 
-    loadVertexShader(gl: WebGLRenderingContext, src: string) {
+    loadVertexShader(gl: WebGL2RenderingContext, src: string) {
         this._loadShader(gl, this.vs, src);
     }
 
-    loadFragmentShader(gl: WebGLRenderingContext, src: string) {
+    loadFragmentShader(gl: WebGL2RenderingContext, src: string) {
         this._loadShader(gl, this.fs, src);
     }
 
-    link(gl: WebGLRenderingContext): WebGLProgram {
+    link(gl: WebGL2RenderingContext): WebGLProgram {
         const program = gl.createProgram()!;
         gl.attachShader(program, this.vs);
         gl.attachShader(program, this.fs);
@@ -47,7 +47,7 @@ export class Shader {
     projectionMatrix: WebGLUniformLocation;
     modelViewMatrix: WebGLUniformLocation;
     uSampler: WebGLUniformLocation;
-    constructor(gl: WebGLRenderingContext, program: WebGLProgram) {
+    constructor(gl: WebGL2RenderingContext, program: WebGLProgram) {
         this.program = program;
         this.vertexPosition = gl.getAttribLocation(this.program, "aVertexPosition")!;
         this.colorPosition = gl.getAttribLocation(this.program, "aColorPosition")!;
@@ -56,13 +56,13 @@ export class Shader {
         this.modelViewMatrix = gl.getUniformLocation(this.program, "uModelViewMatrix")!;
         this.uSampler = gl.getUniformLocation(this.program, 'uSampler')!;
     }
-    use(gl: WebGLRenderingContext) {
+    use(gl: WebGL2RenderingContext) {
         gl.useProgram(this.program);
     }
 }
 
 export function initShaderProgram(
-    gl: WebGLRenderingContext,
+    gl: WebGL2RenderingContext,
     vsSource: string,
     fsSource: string
 ): Shader {

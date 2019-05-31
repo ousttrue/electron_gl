@@ -68,8 +68,8 @@ export class VBO {
 }
 
 export class VAO {
-  //vao: WebGLVertexArrayObject;
-  locationMap : {[semantics: number]: number} = {}
+  vao: WebGLVertexArrayObject;
+  // locationMap : {[semantics: number]: number} = {}
 
   indexBuffer?: VBO;
   vertexAttributes: {[semantics: number]: VBO} = [];
@@ -78,7 +78,7 @@ export class VAO {
   rotation = 0;
 
   constructor(gl: WebGL2RenderingContext) {
-    //this.vao = gl.createVertexArray()!;
+    this.vao = gl.createVertexArray()!;
 
     // Set the drawing position to the "identity" point, which is
     // the center of the scene.
@@ -112,28 +112,28 @@ export class VAO {
     this.indexBuffer = new VBO(gl);
     this.indexBuffer.setIndexData(gl, gl.UNSIGNED_SHORT, model.indices);
 
-    this.locationMap = locationMap;
+    // this.locationMap = locationMap;
     // bind VAO
-    // gl.bindVertexArray(this.vao);
-    // for (const semantics in this.vertexAttributes)
-    // {
-    //   const attr = this.vertexAttributes[semantics];
-    //   if(semantics in locationMap){
-    //     attr.setup(gl, locationMap[semantics]);
-    //   }
-    // }
-    // gl.bindVertexArray(null);
-  }
-
-  draw(gl: WebGL2RenderingContext) {
-    // gl.bindVertexArray(this.vao);
+    gl.bindVertexArray(this.vao);
     for (const semantics in this.vertexAttributes)
     {
       const attr = this.vertexAttributes[semantics];
-      if(semantics in this.locationMap){
-        attr.setup(gl, this.locationMap[semantics]);
+      if(semantics in locationMap){
+        attr.setup(gl, locationMap[semantics]);
       }
     }
+    gl.bindVertexArray(null);
+  }
+
+  draw(gl: WebGL2RenderingContext) {
+    // for (const semantics in this.vertexAttributes)
+    // {
+    //   const attr = this.vertexAttributes[semantics];
+    //   if(semantics in this.locationMap){
+    //     attr.setup(gl, this.locationMap[semantics]);
+    //   }
+    // }
+    gl.bindVertexArray(this.vao);
 
     if (this.indexBuffer) {
       this.indexBuffer.drawElements(gl);

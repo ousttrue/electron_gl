@@ -42,5 +42,9 @@ export function parseGlb(view: DataView): [Uint8Array, Uint8Array] {
         throw new Error('second chunk is not BIN');
     }
 
+    if (pos != length) {
+        throw new Error(`not match length ${pos} with ${length}`);
+    }
+
     return [firstChunk.body, secondChunk.body];
 }

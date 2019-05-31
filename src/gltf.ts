@@ -44,10 +44,8 @@ export enum ValueType {
     MAT4 = 'MAT4',
 }
 
-function getComponentCount(type: ValueType)
-{
-    switch(type)
-    {
+function getComponentCount(type: ValueType) {
+    switch (type) {
         case ValueType.SCALAR:
             return 1;
 
@@ -110,7 +108,7 @@ export interface Gltf {
 export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array): Float32Array {
     const accessor = gltf.accessors[accessorIndex];
     const view = gltf.bufferViews[accessor.bufferView];
-    const segment = bin.subarray(view.byteOffset, view.byteLength + view.byteLength);
+    const segment = bin.subarray(view.byteOffset, view.byteOffset + view.byteLength);
 
     if (accessor.componentType != ComponentType.FLOAT) {
         throw new Error(`attribute componentType is not FLOAT: ${accessor.componentType}`)
@@ -118,25 +116,28 @@ export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array
 
     const componentCount = getComponentCount(accessor.type);
     const begin = accessor.byteOffset / 4;
-    return new Float32Array(segment.buffer).subarray(begin, begin + accessor.count * componentCount);
+    return new Float32Array(segment.buffer, segment.byteOffset, segment.byteLength / 4).subarray(begin, begin + accessor.count * componentCount);
 }
 
 export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16Array | Uint32Array {
     const accessor = gltf.accessors[prim.indices];
+    if (accessor.type != ValueType.SCALAR) {
+        throw new Error(`${accessor.type} is not SCALAR`);
+    }
     const view = gltf.bufferViews[accessor.bufferView];
-    const segment = bin.subarray(view.byteOffset, view.byteLength + view.byteLength);
+    const segment = bin.subarray(view.byteOffset, view.byteOffset + view.byteLength);
 
     switch (accessor.componentType) {
         case ComponentType.UNSIGNED_SHORT:
             {
                 const begin = accessor.byteOffset / 2;
-                return new Uint16Array(segment.buffer).subarray(begin, begin + accessor.count);
+                return new Uint16Array(segment.buffer, segment.byteOffset, segment.byteLength / 2).subarray(begin, begin + accessor.count);
             }
 
         case ComponentType.UNSIGNED_INT:
             {
                 const begin = accessor.byteOffset / 4;
-                return new Uint32Array(segment.buffer).subarray(begin, begin + accessor.count);
+                return new Uint32Array(segment.buffer, segment.byteOffset, segment.byteLength / 4).subarray(begin, begin + accessor.count);
             }
 
         default:

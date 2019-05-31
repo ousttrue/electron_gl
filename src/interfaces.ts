@@ -27,7 +27,7 @@ export interface Model {
 export function LoadDataToModel(data: Uint8Array, utf8decoder: (src: Uint8Array)=>string): Model
 {
     const [gltf_bin, bin] = glb.parseGlb(new DataView(data.buffer));
-    const value = <gltf.Gltf>JSON.parse(new TextDecoder('utf-8').decode(gltf_bin));
+    const value = <gltf.Gltf>JSON.parse(utf8decoder(gltf_bin));
 
     const mesh = value.meshes[0];
     const prim = mesh.primitives[0];

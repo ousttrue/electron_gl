@@ -150,21 +150,8 @@ class Scene {
     this.texture = loadTexture(gl, 'https://mdn.github.io/webgl-examples/tutorial/sample6/cubetexture.png');
   }
 
-  loadGltf(gl: WebGL2RenderingContext, value: gltf.Gltf, bin: Uint8Array)
+  loadGltf(gl: WebGL2RenderingContext, model: interfaces.Model)
   {
-    const mesh = value.meshes[0];
-    const prim = mesh.primitives[0];
-
-    const vertices: {[semantics: number]: interfaces.VertexAttribute} = {}
-    vertices[interfaces.Semantics.POSITION] = {
-      elementCount: 3,
-      values: gltf.getFloatArray(value, prim.attributes['POSITION'], bin)
-    }
-    const model: interfaces.Model = {
-      indices: gltf.getIndices(value, prim, bin),
-      vertices: vertices,
-    }
-
     const locationMap: { [semantics: number]: number } = {};
     {
       const location = gl.getAttribLocation(this.shader.program, "aVertexPosition");
@@ -250,17 +237,14 @@ class Renderer {
   }
 
   async startAsync() {
+    // get LoadModel
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
-    const model: interfaces.LoadModel = await request[1];
-    const [gltf_bin, bin] = parseGlb(new DataView(model.data.buffer));
-    const json = <gltf.Gltf>JSON.parse(new TextDecoder('utf-8').decode(gltf_bin));
+    const data: interfaces.LoadData = await request[1];
 
-    this.scene.loadGltf(this.gl, json, bin);
-
-    for (const mesh of json.meshes) {
-      console.log(mesh);
-    }
+      const model = interfaces.LoadDataToModel(data.data, 
+      bin => new TextDecoder('utf-8').decode(bin));
+    this.scene.loadGltf(this.gl, model);
   }
 
   onFrame(nowSeconds: number) {

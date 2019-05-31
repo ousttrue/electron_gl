@@ -6,7 +6,6 @@ export class VBO {
   bufferType: number = 0;
   elementType: number = 0;
   elementCount: number = 0;
-
   count: number = 0;
 
   constructor(gl: WebGL2RenderingContext) {
@@ -26,6 +25,7 @@ export class VBO {
       stride,
       offset
     );
+    gl.enableVertexAttribArray(location);
   }
 
   drawElements(gl: WebGL2RenderingContext) {
@@ -69,10 +69,10 @@ export class VBO {
 
 export class VAO {
   //vao: WebGLVertexArrayObject;
+  locationMap : {[semantics: number]: number} = {}
 
   indexBuffer?: VBO;
-  vertexAttributes: { [name: string]: VBO } = {};
-  //vertexCount = 0;
+  vertexAttributes: {[semantics: number]: VBO} = [];
 
   modelViewMatrix: mat4;
   rotation = 0;
@@ -101,25 +101,39 @@ export class VAO {
       this.rotation * .7, [0, 1, 0]);
   }
 
-  setData(gl: WebGL2RenderingContext, model: Model) {
-    for (const name in model.vertices) {
-      const attr = model.vertices[name];
+  setData(gl: WebGL2RenderingContext, model: Model, locationMap: { [semantics: number]: number }) {
+    // create VBO
+    for (const semantics in model.vertices) {
+      const attr = model.vertices[semantics];
       const vbo = new VBO(gl);
       vbo.setData(gl, attr.elementCount, attr.values);
-      this.vertexAttributes[name] = vbo;
+      this.vertexAttributes[semantics] = vbo;
     }
-
     this.indexBuffer = new VBO(gl);
     this.indexBuffer.setIndexData(gl, gl.UNSIGNED_SHORT, model.indices);
+
+    this.locationMap = locationMap;
+    // bind VAO
+    // gl.bindVertexArray(this.vao);
+    // for (const semantics in this.vertexAttributes)
+    // {
+    //   const attr = this.vertexAttributes[semantics];
+    //   if(semantics in locationMap){
+    //     attr.setup(gl, locationMap[semantics]);
+    //   }
+    // }
+    // gl.bindVertexArray(null);
   }
 
-  draw(gl: WebGL2RenderingContext, positionLocation: number, colorLocation: number, uv: number) {
-
-    this.vertexAttributes['positions'].setup(gl, positionLocation);
-    gl.enableVertexAttribArray(positionLocation);
-
-    this.vertexAttributes['uv'].setup(gl, uv);
-    gl.enableVertexAttribArray(uv);
+  draw(gl: WebGL2RenderingContext) {
+    // gl.bindVertexArray(this.vao);
+    for (const semantics in this.vertexAttributes)
+    {
+      const attr = this.vertexAttributes[semantics];
+      if(semantics in this.locationMap){
+        attr.setup(gl, this.locationMap[semantics]);
+      }
+    }
 
     if (this.indexBuffer) {
       this.indexBuffer.drawElements(gl);

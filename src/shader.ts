@@ -41,17 +41,11 @@ class ShaderLoader {
 
 export class Shader {
     program: WebGLProgram;
-    vertexPosition: number;
-    colorPosition: number;
-    textureCoord: number;
     projectionMatrix: WebGLUniformLocation;
     modelViewMatrix: WebGLUniformLocation;
     uSampler: WebGLUniformLocation;
     constructor(gl: WebGL2RenderingContext, program: WebGLProgram) {
         this.program = program;
-        this.vertexPosition = gl.getAttribLocation(this.program, "aVertexPosition")!;
-        this.colorPosition = gl.getAttribLocation(this.program, "aColorPosition")!;
-        this.textureCoord = gl.getAttribLocation(this.program, 'aTextureCoord')!;
         this.projectionMatrix = gl.getUniformLocation(this.program, "uProjectionMatrix")!;
         this.modelViewMatrix = gl.getUniformLocation(this.program, "uModelViewMatrix")!;
         this.uSampler = gl.getUniformLocation(this.program, 'uSampler')!;

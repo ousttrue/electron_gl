@@ -127,10 +127,24 @@ class Scene {
     this.camera = new Camera();
     this.camera.setScreenSize(gl.canvas.clientWidth, gl.canvas.clientHeight);
 
-    this.model = new VAO(gl);
-    this.model.setData(gl, cube.model);
-
     this.shader = initShaderProgram(gl, vsSource, fsSource);
+
+    const locaionMap: { [semantics: number]: number } = {};
+    {
+      const location = gl.getAttribLocation(this.shader.program, "aVertexPosition");
+      if (location >= 0) locaionMap[interfaces.Semantics.POSITION] = location;
+    }
+    {
+      const location = gl.getAttribLocation(this.shader.program, "aColorPosition");
+      if (location >= 0) locaionMap[interfaces.Semantics.COLOR] = location;
+    }
+    {
+      const location = gl.getAttribLocation(this.shader.program, 'aTextureCoord');
+      if (location >= 0) locaionMap[interfaces.Semantics.UV] = location;
+    }
+
+    this.model = new VAO(gl);
+    this.model.setData(gl, cube.model, locaionMap);
 
     //this.texture = loadTexture(gl, 'cubetexture.png');
     this.texture = loadTexture(gl, 'https://mdn.github.io/webgl-examples/tutorial/sample6/cubetexture.png');
@@ -179,7 +193,7 @@ class Scene {
     // Tell the shader we bound the texture to texture unit 0
     gl.uniform1i(this.shader.uSampler, 0);
 
-    this.model.draw(gl, this.shader.vertexPosition, this.shader.colorPosition, this.shader.textureCoord);
+    this.model.draw(gl);
   }
 }
 

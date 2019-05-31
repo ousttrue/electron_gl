@@ -99,7 +99,7 @@ for (var j = 0; j < faceColors.length; ++j) {
 
 export const model: interfaces.Model = {
 
-    indices: indicdes,
+    indices: new Uint16Array(indicdes),
 
     vertices: {
     }
@@ -107,13 +107,13 @@ export const model: interfaces.Model = {
 
 model.vertices[interfaces.Semantics.POSITION] = {
     elementCount: 3,
-    values: positions
+    values: new Float32Array(positions)
 }
 model.vertices[interfaces.Semantics.UV] = {
     elementCount: 2,
-    values: uv
+    values: new Float32Array(uv)
 }
 model.vertices[interfaces.Semantics.COLOR] = {
     elementCount: 4,
-    values: colors
+    values: new Float32Array(colors)
 }

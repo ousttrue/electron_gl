@@ -34,35 +34,33 @@ export class VBO {
   }
 
   // float2, 3, 4
-  setData(gl: WebGL2RenderingContext, elementCount: number, values: number[]) {
+  setData(gl: WebGL2RenderingContext, elementCount: number, values: Float32Array) {
     this.count = values.length / elementCount;
     this.bufferType = gl.ARRAY_BUFFER;
     this.elementType = gl.FLOAT;
     this.elementCount = elementCount;
     gl.bindBuffer(this.bufferType, this.vbo);
-    gl.bufferData(this.bufferType, new Float32Array(values), gl.STATIC_DRAW);
+    gl.bufferData(this.bufferType, values, gl.STATIC_DRAW);
   }
 
   // short[] or int[]
-  setIndexData(gl: WebGL2RenderingContext, elementType: number, values: number[]) {
+  setIndexData(gl: WebGL2RenderingContext, values: Uint16Array | Uint32Array) {
     this.count = values.length;
     this.bufferType = gl.ELEMENT_ARRAY_BUFFER;
-    this.elementType = elementType;
     this.elementCount = 1;
     gl.bindBuffer(this.bufferType, this.vbo);
-    switch (this.elementType) {
-      case gl.UNSIGNED_SHORT:
-        gl.bufferData(this.bufferType,
-          new Uint16Array(values), gl.STATIC_DRAW);
-        break;
-
-      case gl.UNSIGNED_INT:
-        gl.bufferData(this.bufferType,
-          new Uint32Array(values), gl.STATIC_DRAW);
-        break;
-
-      default:
-        throw new Error('invalid element type: ');
+    if (values instanceof Uint16Array) {
+      this.elementType = gl.UNSIGNED_SHORT;
+      gl.bufferData(this.bufferType,
+        values, gl.STATIC_DRAW);
+    }
+    else if (values instanceof Uint32Array) {
+      this.elementType = gl.UNSIGNED_INT;
+      gl.bufferData(this.bufferType,
+        values, gl.STATIC_DRAW);
+    }
+    else {
+      throw new Error('invalid element type: ');
     }
   }
 }
@@ -72,7 +70,7 @@ export class VAO {
   // locationMap : {[semantics: number]: number} = {}
 
   indexBuffer?: VBO;
-  vertexAttributes: {[semantics: number]: VBO} = [];
+  vertexAttributes: { [semantics: number]: VBO } = [];
 
   modelViewMatrix: mat4;
   rotation = 0;
@@ -110,15 +108,14 @@ export class VAO {
       this.vertexAttributes[semantics] = vbo;
     }
     this.indexBuffer = new VBO(gl);
-    this.indexBuffer.setIndexData(gl, gl.UNSIGNED_SHORT, model.indices);
+    this.indexBuffer.setIndexData(gl, model.indices);
 
     // this.locationMap = locationMap;
     // bind VAO
     gl.bindVertexArray(this.vao);
-    for (const semantics in this.vertexAttributes)
-    {
+    for (const semantics in this.vertexAttributes) {
       const attr = this.vertexAttributes[semantics];
-      if(semantics in locationMap){
+      if (semantics in locationMap) {
         attr.setup(gl, locationMap[semantics]);
       }
     }

@@ -5,7 +5,7 @@ export interface LoadModel {
 
 export interface VertexAttribute {
     elementCount: number; // 1, 2, 3, 4
-    values: number[];
+    values: Float32Array;
 }
 
 export enum Semantics {
@@ -16,6 +16,6 @@ export enum Semantics {
 }
 
 export interface Model {
-    indices: number[],
+    indices: Uint16Array|Uint32Array,
     vertices: { [semantics: number]: VertexAttribute },
 }

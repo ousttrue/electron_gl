@@ -129,25 +129,59 @@ class Scene {
 
     this.shader = initShaderProgram(gl, vsSource, fsSource);
 
-    const locaionMap: { [semantics: number]: number } = {};
+    const locationMap: { [semantics: number]: number } = {};
     {
       const location = gl.getAttribLocation(this.shader.program, "aVertexPosition");
-      if (location >= 0) locaionMap[interfaces.Semantics.POSITION] = location;
+      if (location >= 0) locationMap[interfaces.Semantics.POSITION] = location;
     }
     {
       const location = gl.getAttribLocation(this.shader.program, "aColorPosition");
-      if (location >= 0) locaionMap[interfaces.Semantics.COLOR] = location;
+      if (location >= 0) locationMap[interfaces.Semantics.COLOR] = location;
     }
     {
       const location = gl.getAttribLocation(this.shader.program, 'aTextureCoord');
-      if (location >= 0) locaionMap[interfaces.Semantics.UV] = location;
+      if (location >= 0) locationMap[interfaces.Semantics.UV] = location;
     }
 
     this.model = new VAO(gl);
-    this.model.setData(gl, cube.model, locaionMap);
+    this.model.setData(gl, cube.model, locationMap);
 
     //this.texture = loadTexture(gl, 'cubetexture.png');
     this.texture = loadTexture(gl, 'https://mdn.github.io/webgl-examples/tutorial/sample6/cubetexture.png');
+  }
+
+  loadGltf(gl: WebGL2RenderingContext, value: gltf.Gltf, bin: Uint8Array)
+  {
+    const mesh = value.meshes[0];
+    const prim = mesh.primitives[0];
+
+    const vertices: {[semantics: number]: interfaces.VertexAttribute} = {}
+    vertices[interfaces.Semantics.POSITION] = {
+      elementCount: 3,
+      values: gltf.getFloatArray(value, prim.attributes['POSITION'], bin)
+    }
+    const model: interfaces.Model = {
+      indices: gltf.getIndices(value, prim, bin),
+      vertices: vertices,
+    }
+
+    const locationMap: { [semantics: number]: number } = {};
+    {
+      const location = gl.getAttribLocation(this.shader.program, "aVertexPosition");
+      if (location >= 0) locationMap[interfaces.Semantics.POSITION] = location;
+    }
+    {
+      const location = gl.getAttribLocation(this.shader.program, "aColorPosition");
+      if (location >= 0) locationMap[interfaces.Semantics.COLOR] = location;
+    }
+    {
+      const location = gl.getAttribLocation(this.shader.program, 'aTextureCoord');
+      if (location >= 0) locationMap[interfaces.Semantics.UV] = location;
+    }
+
+    //this.model.release();
+    this.model = new VAO(gl);
+    this.model.setData(gl, model, locationMap);
   }
 
   resize(w: number, h: number) {
@@ -221,6 +255,8 @@ class Renderer {
     const model: interfaces.LoadModel = await request[1];
     const [gltf_bin, bin] = parseGlb(new DataView(model.data.buffer));
     const json = <gltf.Gltf>JSON.parse(new TextDecoder('utf-8').decode(gltf_bin));
+
+    this.scene.loadGltf(this.gl, json, bin);
 
     for (const mesh of json.meshes) {
       console.log(mesh);

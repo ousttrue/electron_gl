@@ -281,26 +281,22 @@ class Renderer {
     this.scene.camera.dolly(e.deltaY);
   }
 
-  loadModel(data: Uint8Array)
-  {
-    const model = interfaces.LoadDataToModel(data,
-      bin => new TextDecoder('utf-8').decode(bin));
-    this.scene.loadGltf(this.gl, model);
-  }
-
   async startAsync() {
-    // get LoadModel
-    const request = this.rpc.createRequest('getDefaultModel');
+    const request = this.rpc.createRequest('getModel');
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
-    this.loadModel(data.data);
+
+    const model = interfaces.LoadDataToModel(data);
+    this.scene.loadGltf(this.gl, model);
   }
 
   async loadAsync(path: string){
     const request = this.rpc.createRequest('getModel', path);
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
-    this.loadModel(data.data);
+
+    const model = interfaces.LoadDataToModel(data);
+    this.scene.loadGltf(this.gl, model);
   }
 
   onFrame(nowSeconds: number) {

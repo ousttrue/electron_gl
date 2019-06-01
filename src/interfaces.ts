@@ -3,8 +3,14 @@ import * as gltf from './gltf';
 
 
 export interface LoadData {
-    url: string;
-    data: Buffer;
+    // gltf or glb url
+    url: string; 
+
+    // gltf json
+    json: string;
+
+    // gltf first buffer or glb binary chunk
+    bin: Uint8Array;
 }
 
 export interface VertexAttribute {
@@ -24,10 +30,9 @@ export interface Model {
     vertices: { [semantics: number]: VertexAttribute },
 }
 
-export function LoadDataToModel(data: Uint8Array, utf8decoder: (src: Uint8Array)=>string): Model
+export function LoadDataToModel(data: LoadData): Model
 {
-    const [gltf_bin, bin] = glb.parseGlb(new DataView(data.buffer));
-    const value = <gltf.Gltf>JSON.parse(utf8decoder(gltf_bin));
+    const value = <gltf.Gltf>JSON.parse(data.json);
 
     const mesh = value.meshes[0];
     const prim = mesh.primitives[0];
@@ -35,10 +40,10 @@ export function LoadDataToModel(data: Uint8Array, utf8decoder: (src: Uint8Array)
     const vertices: {[semantics: number]: VertexAttribute} = {}
     vertices[Semantics.POSITION] = {
       elementCount: 3,
-      values: gltf.getFloatArray(value, prim.attributes['POSITION'], bin)
+      values: gltf.getFloatArray(value, prim.attributes['POSITION'], data.bin)
     }
     const model: Model = {
-      indices: gltf.getIndices(value, prim, bin),
+      indices: gltf.getIndices(value, prim, data.bin),
       vertices: vertices,
     }
 

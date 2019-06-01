@@ -11,7 +11,7 @@ interface Chunk {
 function readChunk(view: DataView, pos: number): [Chunk, number] {
     const length = view.getUint32(pos, true); pos += 4;
     const chunkType = view.getUint32(pos, true); pos += 4;
-    const body = new Uint8Array(view.buffer, pos, length);
+    const body = new Uint8Array(view.buffer, view.byteOffset + pos, length);
     return [{ type: chunkType, body: body }, pos + length];
 }
 

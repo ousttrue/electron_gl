@@ -17,13 +17,13 @@ describe('glb parser', () => {
     it('parse duck', () => {
         const duckPath = path.join(__dirname, "../samples/Duck/glTF-Binary/Duck.glb")
         const data = fs.readFileSync(duckPath);
+        const [gltf_bin, bin] = glb.parseGlb(new DataView(data.buffer));
+        assert.instanceOf(gltf_bin, Uint8Array);
+        assert.instanceOf(bin, Uint8Array);
+
+        const gltf_json = decode(gltf_bin);
+
         {
-            const [gltf_bin, bin] = glb.parseGlb(new DataView(data.buffer));
-
-            assert.instanceOf(gltf_bin, Uint8Array);
-            assert.instanceOf(bin, Uint8Array);
-
-            const gltf_json = decode(gltf_bin);
             const gltf_value = <gltf.Gltf>JSON.parse(gltf_json);
             assert.equal(gltf_value.asset.version, "2.0");
             assert.equal(gltf_value.meshes.length, 1);
@@ -47,7 +47,12 @@ describe('glb parser', () => {
         }
 
         {
-            const model = interfaces.LoadDataToModel(data, decode);
+            const loadData: interfaces.LoadData = {
+                url: "",
+                json: gltf_json,
+                bin: bin
+            };
+            const model = interfaces.LoadDataToModel(loadData);
             assert.instanceOf(model.indices, Uint16Array);
             assert.equal(12636, model.indices.length);
             assert.equal(0, model.indices[0]);

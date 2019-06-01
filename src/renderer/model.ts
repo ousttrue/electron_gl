@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { Model } from './interfaces'
+import { Model } from '../interfaces'
 
 export class VBO {
   vbo: WebGLBuffer;

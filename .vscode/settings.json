@@ -1,6 +1,9 @@
 {
     "liveServer.settings.root": "/public",
     "cSpell.words": [
-        "devtool"
+        "Coord",
+        "Submesh",
+        "devtool",
+        "submeshes"
     ]
 }

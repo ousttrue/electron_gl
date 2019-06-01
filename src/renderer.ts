@@ -2,6 +2,7 @@ import { ipcRenderer, remote } from 'electron'
 import { Scene } from './renderer/scene'
 import { RPC } from './rpc';
 import * as interfaces from "./interfaces";
+import { Shader } from './renderer/shader';
 
 
 const vsSource = `
@@ -41,14 +42,19 @@ class Renderer {
   mouseX = 0;
   mouseY = 0;
 
+  shader: Shader;
+
   constructor(gl: WebGL2RenderingContext) {
+    this.gl = gl;
+    this.scene = new Scene(gl);
+    this.shader = new Shader(gl);
+    this.shader.load(gl, vsSource, fsSource);
+
     gl.canvas.addEventListener('pointerdown', e => this.onMouseDown(gl.canvas, e));
     gl.canvas.addEventListener('pointerup', e => this.onMouseUp(gl.canvas, e));
     gl.canvas.addEventListener('pointermove', e => this.onMouseMove(gl.canvas, e));
     gl.canvas.addEventListener('wheel', e => this.onMouseWheel(gl.canvas, e));
 
-    this.gl = gl;
-    this.scene = new Scene(gl, vsSource, fsSource);
     ipcRenderer.on('rpc', async (e: Electron.Event, value: any) => {
       const response = await this.rpc.dispatchAsync(value);
       if (response) {
@@ -100,8 +106,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
-    const model = interfaces.LoadDataToModel(data);
-    this.scene.loadGltf(this.gl, model);
+    this.scene.loadGltf(this.gl, data, this.shader);
   }
 
   async loadAsync(path: string) {
@@ -109,8 +114,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
-    const model = interfaces.LoadDataToModel(data);
-    this.scene.loadGltf(this.gl, model);
+    this.scene.loadGltf(this.gl, data, this.shader);
   }
 
   onFrame(nowSeconds: number) {

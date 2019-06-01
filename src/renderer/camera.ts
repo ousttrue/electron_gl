@@ -3,6 +3,10 @@ import { mat4, vec3 } from 'gl-matrix'
 
 export class Camera {
 
+    // Clear to black, fully opaque
+    clearColor: [number, number, number, number] = [0, 0, 0, 1.0]
+    viewportX = 0;
+    viewportY = 0;
     screenWidth = 500;
     screenHeight = 500;
 
@@ -68,5 +72,13 @@ export class Camera {
 
     updateProjection() {
         mat4.perspective(this.projectionMatrix, this.fovY, this.aspect, this.zNear, this.zFar);
+    }
+
+    setup(gl: WebGL2RenderingContext)
+    {
+        gl.clearColor(...this.clearColor);
+        gl.clearDepth(1.0); // Clear everything
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.viewport(this.viewportX, this.viewportY, this.screenWidth, this.screenHeight);
     }
 }

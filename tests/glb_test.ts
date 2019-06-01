@@ -22,20 +22,19 @@ describe('glb parser', () => {
         assert.instanceOf(bin, Uint8Array);
 
         const gltf_json = decode(gltf_bin);
+        const gltf_value = <gltf.Gltf>JSON.parse(gltf_json);
+        assert.equal(gltf_value.asset.version, "2.0");
+        assert.equal(gltf_value.meshes.length, 1);
+
+        const mesh = gltf_value.meshes[0];
+        assert.equal(mesh.primitives.length, 1);
+
+        const primitive = mesh.primitives[0];
+        assert.equal(gltf_value.accessors.length, 4); // pos, normal, uv + index
+        assert.equal(gltf_value.bufferViews.length, 4); // pos, normal, uv + index
+        assert.equal(gltf_value.buffers.length, 1); // pos, normal, uv + index
 
         {
-            const gltf_value = <gltf.Gltf>JSON.parse(gltf_json);
-            assert.equal(gltf_value.asset.version, "2.0");
-            assert.equal(gltf_value.meshes.length, 1);
-
-            const mesh = gltf_value.meshes[0];
-            assert.equal(mesh.primitives.length, 1);
-
-            const primitive = mesh.primitives[0];
-            assert.equal(gltf_value.accessors.length, 4); // pos, normal, uv + index
-            assert.equal(gltf_value.bufferViews.length, 4); // pos, normal, uv + index
-            assert.equal(gltf_value.buffers.length, 1); // pos, normal, uv + index
-
             const index_accessor = gltf_value.accessors[0];
             assert.equal(index_accessor.componentType, gltf.ComponentType.UNSIGNED_SHORT);
             assert.equal(index_accessor.type, gltf.ValueType.SCALAR);
@@ -52,7 +51,7 @@ describe('glb parser', () => {
                 json: gltf_json,
                 bin: bin
             };
-            const model = interfaces.LoadDataToModel(loadData);
+            const model = interfaces.LoadDataToModel(gltf_value, mesh, primitive, loadData.bin);
             assert.instanceOf(model.indices, Uint16Array);
             assert.equal(12636, model.indices.length);
             assert.equal(0, model.indices[0]);

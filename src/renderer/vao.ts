@@ -6,10 +6,14 @@ export class VBO {
   bufferType: number = 0;
   elementType: number = 0;
   elementCount: number = 0;
-  count: number = 0;
+  //count: number = 0;
 
   constructor(gl: WebGL2RenderingContext) {
     this.vbo = gl.createBuffer()!;
+  }
+
+  release(gl: WebGL2RenderingContext) {
+    gl.deleteBuffer(this.vbo);
   }
 
   setup(gl: WebGL2RenderingContext, location: number) {
@@ -28,14 +32,14 @@ export class VBO {
     gl.enableVertexAttribArray(location);
   }
 
-  drawElements(gl: WebGL2RenderingContext) {
+  drawElements(gl: WebGL2RenderingContext, offset: number, count: number) {
     gl.bindBuffer(this.bufferType, this.vbo);
-    gl.drawElements(gl.TRIANGLES, this.count, this.elementType, 0);
+    gl.drawElements(gl.TRIANGLES, count, this.elementType, offset);
   }
 
   // float2, 3, 4
   setData(gl: WebGL2RenderingContext, elementCount: number, values: Float32Array) {
-    this.count = values.length / elementCount;
+    //this.count = values.length / elementCount;
     this.bufferType = gl.ARRAY_BUFFER;
     this.elementType = gl.FLOAT;
     this.elementCount = elementCount;
@@ -45,7 +49,7 @@ export class VBO {
 
   // short[] or int[]
   setIndexData(gl: WebGL2RenderingContext, values: Uint16Array | Uint32Array) {
-    this.count = values.length;
+    //this.count = values.length;
     this.bufferType = gl.ELEMENT_ARRAY_BUFFER;
     this.elementCount = 1;
     gl.bindBuffer(this.bufferType, this.vbo);
@@ -76,7 +80,19 @@ export class VAO {
     this.vao = gl.createVertexArray()!;
   }
 
-  setData(gl: WebGL2RenderingContext, model: Model, locationMap: { [semantics: number]: number }) {
+  release(gl: WebGL2RenderingContext)
+  {
+    if(this.indexBuffer){
+      this.indexBuffer.release(gl);
+    }
+    for(const semantics in this.vertexAttributes)
+    {
+      this.vertexAttributes[semantics].release(gl);
+    }
+    gl.deleteVertexArray(this.vao);
+  }
+
+  setData(gl: WebGL2RenderingContext, model: Model) {
     // create VBO
     for (const semantics in model.vertices) {
       const attr = model.vertices[semantics];
@@ -86,8 +102,13 @@ export class VAO {
     }
     this.indexBuffer = new VBO(gl);
     this.indexBuffer.setIndexData(gl, model.indices);
+  }
 
-    // this.locationMap = locationMap;
+  draw(gl: WebGL2RenderingContext, offset: number, count: number) {
+    gl.drawArrays(gl.TRIANGLES, offset, count);
+  }
+
+  bindLocation(gl: WebGL2RenderingContext, locationMap: { [semantics: number]: number }) {
     // bind VAO
     gl.bindVertexArray(this.vao);
     for (const semantics in this.vertexAttributes) {
@@ -99,7 +120,7 @@ export class VAO {
     gl.bindVertexArray(null);
   }
 
-  draw(gl: WebGL2RenderingContext) {
+  bind(gl: WebGL2RenderingContext) {
     // for (const semantics in this.vertexAttributes)
     // {
     //   const attr = this.vertexAttributes[semantics];
@@ -108,9 +129,5 @@ export class VAO {
     //   }
     // }
     gl.bindVertexArray(this.vao);
-
-    if (this.indexBuffer) {
-      this.indexBuffer.drawElements(gl);
-    }
   }
 }

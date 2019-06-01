@@ -12,5 +12,9 @@ WebGL practice.
 * [x] gltf buffer manager
 * [x] open to electron menu
 * [ ] camera position when load
-* [ ] submesh
+* [x] submesh
 * [ ] material
+* [ ] shader manager
+    * [ ] unlit
+    * [ ] PBR
+* [ ] first data, then load

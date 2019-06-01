@@ -30,22 +30,16 @@ export interface Model {
     vertices: { [semantics: number]: VertexAttribute },
 }
 
-export function LoadDataToModel(data: LoadData): Model
+export function LoadDataToModel(value: gltf.Gltf, mesh: gltf.Mesh, prim: gltf.Primitive, bin: Uint8Array): Model
 {
-    const value = <gltf.Gltf>JSON.parse(data.json);
-
-    const mesh = value.meshes[0];
-    const prim = mesh.primitives[0];
-
     const vertices: {[semantics: number]: VertexAttribute} = {}
     vertices[Semantics.POSITION] = {
       elementCount: 3,
-      values: gltf.getFloatArray(value, prim.attributes['POSITION'], data.bin)
+      values: gltf.getFloatArray(value, prim.attributes['POSITION'], bin)
     }
     const model: Model = {
-      indices: gltf.getIndices(value, prim, data.bin),
+      indices: gltf.getIndices(value, prim, bin),
       vertices: vertices,
     }
-
     return model;
 }

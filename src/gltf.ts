@@ -34,6 +34,23 @@ export enum ComponentType {
     FLOAT = 5126,
 }
 
+
+export function getComponentByteSize(componentTye: ComponentType)
+{
+    switch(componentTye)
+    {
+        case ComponentType.UNSIGNED_SHORT:
+            return 2;
+
+        case ComponentType.UNSIGNED_INT:
+            return 4;
+
+        default:
+            throw new Error(`invalid index type: ${componentTye}`);
+    }
+}
+
+
 export enum ValueType {
     SCALAR = 'SCALAR',
     VEC2 = 'VEC2',
@@ -44,7 +61,7 @@ export enum ValueType {
     MAT4 = 'MAT4',
 }
 
-function getComponentCount(type: ValueType) {
+export function getComponentCount(type: ValueType) {
     switch (type) {
         case ValueType.SCALAR:
             return 1;

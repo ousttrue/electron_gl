@@ -47,13 +47,19 @@ export class Shader {
     modelViewMatrix: WebGLUniformLocation = 0;
     uSampler: WebGLUniformLocation = 0;
     locationMap: {[semantics: number]: number} = {};
+    _refCount = 1;
 
     constructor(gl: WebGL2RenderingContext) {
         this.program = gl.createProgram()!;
     }
 
+    addRef(){ ++this._refCount;}
+
     release(gl: WebGL2RenderingContext) {
-        gl.deleteProgram(this.program);
+        --this._refCount;
+        if(this._refCount<=0){
+            gl.deleteProgram(this.program);
+        }
     }
 
     load(gl: WebGL2RenderingContext,

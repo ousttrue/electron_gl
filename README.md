@@ -11,6 +11,7 @@ WebGL practice.
 * [x] file open dialog
 * [x] gltf buffer manager
 * [x] open to electron menu
+* [x] shader refcount
 * [ ] camera position when load
 * [x] submesh
 * [ ] material

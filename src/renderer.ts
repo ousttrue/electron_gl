@@ -106,6 +106,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
+    this.shader.addRef();
     this.scene.loadGltf(this.gl, data, this.shader);
   }
 
@@ -114,6 +115,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
+    this.shader.addRef();
     this.scene.loadGltf(this.gl, data, this.shader);
   }
 

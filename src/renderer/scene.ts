@@ -1,5 +1,5 @@
 import { Camera } from './camera'
-import { VAO } from './model'
+import { VAO } from './vao'
 import { Shader, initShaderProgram } from './shader'
 import { loadTexture } from './texture'
 import * as interfaces from '../interfaces'

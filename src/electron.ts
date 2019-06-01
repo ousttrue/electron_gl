@@ -19,17 +19,17 @@ ipcMain.on('rpc', async (e: Electron.Event, value: any) => {
   }
 });
 
-async function getAsync(path: string): Promise<Buffer> {
-  if (path.startsWith('http:') || path.startsWith('https:')) {
+async function getAsync(pathOrUri: string): Promise<Buffer> {
+  if (pathOrUri.startsWith('http:') || pathOrUri.startsWith('https:')) {
     // from net work
-    const response = await fetch(path);
+    const response = await fetch(pathOrUri);
     const body = await response.buffer();
     return body;
   }
   else {
     // from file system
     const promise = new Promise<Buffer>((resolve, reject) => {
-      fs.readFile(path, null, (err, data) => {
+      fs.readFile(pathOrUri, null, (err, data) => {
         if (err) {
           reject(err);
         }
@@ -43,17 +43,17 @@ async function getAsync(path: string): Promise<Buffer> {
   }
 }
 
-rpc.methodMap['getModel'] = async function (path?: string): Promise<interfaces.LoadData> {
-  if (!path) {
+rpc.methodMap['getModel'] = async function (pathOrUri?: string): Promise<interfaces.LoadData> {
+  if (!pathOrUri) {
     // default
-    path = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
+    pathOrUri = 'https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Box/glTF-Binary/Box.glb';
   }
-  const body = await getAsync(path);
+  const body = await getAsync(pathOrUri);
 
   try {   
     const [gltf_bin, bin] = glb.parseGlb(new DataView(body.buffer, body.byteOffset, body.byteLength));
     return {
-      url: path,
+      url: pathOrUri,
       json: new TextDecoder('utf-8').decode(gltf_bin),
       bin: bin,
     };
@@ -61,13 +61,17 @@ rpc.methodMap['getModel'] = async function (path?: string): Promise<interfaces.L
   catch(ex){
     const gltf_utf8 = new TextDecoder('utf-8').decode(body);
     const parsed = <Gltf>JSON.parse(gltf_utf8);
+
+    // get buffers[0]
     const buffer = parsed.buffers[0];
     if (!buffer.uri) {
       throw new Error('no uri');
     }
-    const bin = await getAsync(buffer.uri);
+    const bin_path = path.join(path.dirname(pathOrUri), buffer.uri);
+    const bin = await getAsync(bin_path);
+
     return {
-      url: path,
+      url: pathOrUri,
       json: gltf_utf8,
       bin: bin
     };

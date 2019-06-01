@@ -9,6 +9,6 @@ WebGL practice.
 
 * [x] mouse orbit camera
 * [x] file open dialog
-* [ ] gltf buffer manager
-* [ ] material
+* [x] gltf buffer manager
 * [ ] submesh
+* [ ] material

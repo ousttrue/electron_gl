@@ -331,8 +331,7 @@ window.onload = function (e) {
       title: 'open model',
       defaultPath: '.',
       filters: [
-          {name: 'glb', extensions: ['glb', 'vrm', 'vci']},
-          {name: 'gltf', extensions: ['gltf']}
+          {name: 'gltf', extensions: ['gltf', 'glb', 'vrm', 'vci']},
       ]
   }, async (fileNames) => {
     if(fileNames){

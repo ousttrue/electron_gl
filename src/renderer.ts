@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, remote } from 'electron'
 import { mat4 } from "gl-matrix";
 import { VAO } from "./model";
 import { Shader, initShaderProgram } from "./shader";
@@ -248,7 +248,7 @@ class Renderer {
     //console.log(`down ${e.buttons}`);
     this.mouseX = e.clientX;
     this.mouseY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);  
+    canvas.setPointerCapture(e.pointerId);
   }
 
   onMouseUp(canvas: HTMLCanvasElement, e: PointerEvent) {
@@ -257,7 +257,7 @@ class Renderer {
   }
 
   onMouseMove(canvas: HTMLCanvasElement, e: PointerEvent) {
-    if(e.buttons==0){
+    if (e.buttons == 0) {
       return;
     }
     //console.log(this, e.clientX, e.clientY);
@@ -281,15 +281,26 @@ class Renderer {
     this.scene.camera.dolly(e.deltaY);
   }
 
+  loadModel(data: Uint8Array)
+  {
+    const model = interfaces.LoadDataToModel(data,
+      bin => new TextDecoder('utf-8').decode(bin));
+    this.scene.loadGltf(this.gl, model);
+  }
+
   async startAsync() {
     // get LoadModel
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
+    this.loadModel(data.data);
+  }
 
-    const model = interfaces.LoadDataToModel(data.data,
-      bin => new TextDecoder('utf-8').decode(bin));
-    this.scene.loadGltf(this.gl, model);
+  async loadAsync(path: string){
+    const request = this.rpc.createRequest('getModel', path);
+    ipcRenderer.send('rpc', request[0]);
+    const data: interfaces.LoadData = await request[1];
+    this.loadModel(data.data);
   }
 
   onFrame(nowSeconds: number) {
@@ -316,6 +327,23 @@ window.onload = function (e) {
   }
 
   renderer = new Renderer(gl);
+
+  const openButton = <HTMLButtonElement>document.querySelector("#open");
+  openButton.addEventListener('click', () => {
+    remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+      properties: ['openFile'],
+      title: 'open model',
+      defaultPath: '.',
+      filters: [
+          {name: 'glb', extensions: ['glb', 'vrm', 'vci']},
+          {name: 'gltf', extensions: ['gltf']}
+      ]
+  }, async (fileNames) => {
+    if(fileNames){
+      await renderer.loadAsync(fileNames[0]);
+    }
+  });
+  });
 
   function render(now: number) {
     renderer.onFrame(now * 0.001);

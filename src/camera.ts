@@ -11,7 +11,7 @@ export class Camera {
     aspect = 1;
     fovY = (45 * Math.PI) / 180; // in radians
     zNear = 0.1;
-    zFar = 100.0;
+    zFar = 1000.0;
 
     // view
     viewMatrix: mat4;

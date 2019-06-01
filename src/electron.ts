@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import { RPC } from "./rpc";
 import * as interfaces from "./interfaces";
 import * as glb from "./glb";
+import * as fs from "fs";
 
 let mainWindow: BrowserWindow | null;
 
@@ -24,6 +25,28 @@ rpc.methodMap['getDefaultModel'] = async function (): Promise<interfaces.LoadDat
 
   return {
     url: url,
+    data: body,
+  };
+}
+
+rpc.methodMap['getModel'] = async function (path: string): Promise<interfaces.LoadData> {
+  console.log(`getModel: ${path}`)
+  const promise = new Promise<Buffer>((resolve, reject) => {
+    fs.readFile(path, null, (err, data) => {
+      if(err){
+        reject(err);
+      }
+      else{
+        resolve(data);
+      }
+    });
+  });
+  const body = await promise;
+
+  console.log(typeof (body));
+
+  return {
+    url: path,
     data: body,
   };
 }

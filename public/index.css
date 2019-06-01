@@ -10,3 +10,9 @@ canvas#glCanvas {
     height: 100%;
     background-color: black;
 }
+
+button#open {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

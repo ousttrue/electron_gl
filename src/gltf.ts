@@ -144,3 +144,34 @@ export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16
             throw new Error(`unknown componentType: ${accessor.componentType}`);
     }
 }
+
+export function hasSharedVertexBuffer(mesh: Mesh): boolean {
+    if (mesh.primitives.length <= 1) {
+        return true;
+    }
+
+    const first = mesh.primitives[0].attributes;
+
+    for(let i=1; i<mesh.primitives.length; ++i)
+    {
+        const current = mesh.primitives[i].attributes;
+
+        if(first.length!=current.length){
+            //console.debug(`${first.length} != ${current.length}`);
+            return false;
+        }
+
+        for(let key in first)
+        {
+            if(!(key in current)){
+                //console.debug(`${key} !in ${current}`);
+                return false;
+            }
+            if(first[key]!=current[key]){
+                //console.debug(`${key}: ${first[key]} != ${current[key]}`);
+                return false;
+            }
+        }
+    }
+    return true;
+}

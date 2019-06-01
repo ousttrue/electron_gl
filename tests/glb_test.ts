@@ -64,3 +64,56 @@ describe('glb parser', () => {
         }
     });
 })
+
+describe('gltf primitive has shared buffer ?', () => {
+
+    it('duck', () => {
+        const gltf_path = path.join(__dirname, "../samples/Duck/glTF-Binary/Duck.glb")
+        const data = fs.readFileSync(gltf_path);
+        const [gltf_bin, bin] = glb.parseGlb(new DataView(data.buffer));
+        const gltf_json = decode(gltf_bin);
+        const gltf_value = <gltf.Gltf>JSON.parse(gltf_json);
+
+        const mesh0 = gltf_value.meshes[0];
+        assert.isTrue(gltf.hasSharedVertexBuffer(mesh0));
+    });
+
+    it('buggy', () => {
+        const gltf_path = path.join(__dirname, "../samples/Buggy/glTF/Buggy.gltf")
+        const gltf_bin = fs.readFileSync(gltf_path);
+        const gltf_json = decode(gltf_bin);
+        const gltf_value = <gltf.Gltf>JSON.parse(gltf_json);
+
+        for (let i = 0; i < gltf_value.meshes.length; ++i) {
+            const mesh = gltf_value.meshes[i];
+            if (mesh.primitives.length > 1) {
+                //console.log(i, mesh.primitives);
+                assert.isFalse(gltf.hasSharedVertexBuffer(mesh));
+            }
+            else {
+                assert.isTrue(gltf.hasSharedVertexBuffer(mesh));
+            }
+        }
+    });
+
+    it('shared', () => {
+        const mesh: gltf.Mesh = {
+            primitives: [
+                {
+                    indices: 0,
+                    attributes: {
+                        POSITION: 1,
+                    },
+                },
+                {
+                    indices: 1,
+                    attributes: {
+                        POSITION: 1,
+                    },
+                }
+            ]
+        };
+
+        assert.isTrue(gltf.hasSharedVertexBuffer(mesh));
+    });
+})

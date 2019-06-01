@@ -8,6 +8,7 @@ import { RPC } from './rpc';
 import { parseGlb } from "./glb";
 import * as interfaces from "./interfaces";
 import * as gltf from "./gltf";
+import { timingSafeEqual } from 'crypto';
 
 const vsSource = `
 attribute vec4 aVertexPosition;
@@ -123,6 +124,7 @@ class Scene {
   texture: WebGLTexture;
 
   constructor(gl: WebGL2RenderingContext) {
+
     // setup scene
     this.camera = new Camera();
     this.camera.setScreenSize(gl.canvas.clientWidth, gl.canvas.clientHeight);
@@ -150,8 +152,7 @@ class Scene {
     this.texture = loadTexture(gl, 'https://mdn.github.io/webgl-examples/tutorial/sample6/cubetexture.png');
   }
 
-  loadGltf(gl: WebGL2RenderingContext, model: interfaces.Model)
-  {
+  loadGltf(gl: WebGL2RenderingContext, model: interfaces.Model) {
     const locationMap: { [semantics: number]: number } = {};
     {
       const location = gl.getAttribLocation(this.shader.program, "aVertexPosition");
@@ -176,7 +177,7 @@ class Scene {
   }
 
   update(deltaTime: number) {
-    this.model.update(deltaTime);
+    //this.model.update(deltaTime);
   }
 
   draw(gl: WebGL2RenderingContext) {
@@ -204,7 +205,7 @@ class Scene {
     gl.uniformMatrix4fv(
       this.shader.modelViewMatrix,
       false,
-      this.model.modelViewMatrix
+      this.camera.viewMatrix
     );
 
     // Tell WebGL we want to affect texture unit 0
@@ -223,8 +224,15 @@ class Renderer {
   scene: Scene;
   last = 0;
   rpc = new RPC();
+  mouseX = 0;
+  mouseY = 0;
 
   constructor(gl: WebGL2RenderingContext) {
+    gl.canvas.addEventListener('pointerdown', e => this.onMouseDown(gl.canvas, e));
+    gl.canvas.addEventListener('pointerup', e => this.onMouseUp(gl.canvas, e));
+    gl.canvas.addEventListener('pointermove', e => this.onMouseMove(gl.canvas, e));
+    gl.canvas.addEventListener('wheel', e => this.onMouseWheel(gl.canvas, e));
+
     this.gl = gl;
     this.scene = new Scene(gl);
     ipcRenderer.on('rpc', async (e: Electron.Event, value: any) => {
@@ -236,13 +244,50 @@ class Renderer {
     this.startAsync();
   }
 
+  onMouseDown(canvas: HTMLCanvasElement, e: PointerEvent) {
+    //console.log(`down ${e.buttons}`);
+    this.mouseX = e.clientX;
+    this.mouseY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);  
+  }
+
+  onMouseUp(canvas: HTMLCanvasElement, e: PointerEvent) {
+    //console.log(`up ${e.buttons}`);
+    canvas.setPointerCapture(e.pointerId);
+  }
+
+  onMouseMove(canvas: HTMLCanvasElement, e: PointerEvent) {
+    if(e.buttons==0){
+      return;
+    }
+    //console.log(this, e.clientX, e.clientY);
+    const dx = e.clientX - this.mouseX;
+    this.mouseX = e.clientX;
+    const dy = e.clientY - this.mouseY;
+    this.mouseY = e.clientY;
+    if (e.buttons & 1) {
+      //console.log(`left: ${dx}, ${dy}`)
+    }
+    if (e.buttons & 2) {
+      this.scene.camera.yawPitch(dx, dy);
+    }
+    if (e.buttons & 4) {
+      this.scene.camera.shift(-dx, dy);
+    }
+  }
+
+  onMouseWheel(canvas: HTMLCanvasElement, e: MouseWheelEvent) {
+    //console.log(this, e.deltaY);
+    this.scene.camera.dolly(e.deltaY);
+  }
+
   async startAsync() {
     // get LoadModel
     const request = this.rpc.createRequest('getDefaultModel');
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
-      const model = interfaces.LoadDataToModel(data.data, 
+    const model = interfaces.LoadDataToModel(data.data,
       bin => new TextDecoder('utf-8').decode(bin));
     this.scene.loadGltf(this.gl, model);
   }

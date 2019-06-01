@@ -72,31 +72,8 @@ export class VAO {
   indexBuffer?: VBO;
   vertexAttributes: { [semantics: number]: VBO } = [];
 
-  modelViewMatrix: mat4;
-  rotation = 0;
-
   constructor(gl: WebGL2RenderingContext) {
     this.vao = gl.createVertexArray()!;
-
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
-    this.modelViewMatrix = mat4.create();
-    mat4.translate(
-      this.modelViewMatrix, // destination matrix
-      this.modelViewMatrix, // matrix to translate
-      [-0.0, 0.0, -6.0]
-    ); // amount to translate
-  }
-
-  update(deltaTime: number) {
-    this.rotation = deltaTime;
-    // mat4.rotate(this.modelViewMatrix,  // destination matrix
-    //   this.modelViewMatrix,  // matrix to rotate
-    //   this.rotation,   // amount to rotate in radians
-    //   [0, 0, 1]);       // axis to rotate around
-
-    mat4.rotate(this.modelViewMatrix, this.modelViewMatrix,
-      this.rotation * .7, [0, 1, 0]);
   }
 
   setData(gl: WebGL2RenderingContext, model: Model, locationMap: { [semantics: number]: number }) {

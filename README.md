@@ -7,6 +7,7 @@ WebGL practice.
 
 ## ToDo
 
-* [ ] mouse camera
+* [x] mouse orbit camera
+* [ ] file open dialog
 * [ ] material
 * [ ] submesh

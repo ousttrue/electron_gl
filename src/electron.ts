@@ -5,9 +5,8 @@ import { RPC } from "./rpc";
 import * as interfaces from "./interfaces";
 import * as glb from "./glb";
 import * as fs from "fs";
-import { generateKeyPairSync } from "crypto";
 import { Gltf } from "./gltf";
-import { isBuffer } from "util";
+
 
 let mainWindow: BrowserWindow | null;
 
@@ -50,7 +49,7 @@ rpc.methodMap['getModel'] = async function (pathOrUri?: string): Promise<interfa
   }
   const body = await getAsync(pathOrUri);
 
-  try {   
+  try {
     const [gltf_bin, bin] = glb.parseGlb(new DataView(body.buffer, body.byteOffset, body.byteLength));
     return {
       url: pathOrUri,
@@ -58,7 +57,7 @@ rpc.methodMap['getModel'] = async function (pathOrUri?: string): Promise<interfa
       bin: bin,
     };
   }
-  catch(ex){
+  catch (ex) {
     const gltf_utf8 = new TextDecoder('utf-8').decode(body);
     const parsed = <Gltf>JSON.parse(gltf_utf8);
 
@@ -101,6 +100,8 @@ async function createWindow() {
   });
 }
 
+const isMac = process.platform === "darwin";
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -110,7 +111,7 @@ app.on("ready", createWindow);
 app.on("window-all-closed", () => {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== "darwin") {
+  if (!isMac) {
     app.quit();
   }
 });

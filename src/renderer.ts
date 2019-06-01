@@ -104,7 +104,7 @@ class Renderer {
     this.scene.loadGltf(this.gl, model);
   }
 
-  async loadAsync(path: string){
+  async loadAsync(path: string) {
     const request = this.rpc.createRequest('getModel', path);
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
@@ -138,21 +138,37 @@ window.onload = function (e) {
 
   renderer = new Renderer(gl);
 
-  const openButton = <HTMLButtonElement>document.querySelector("#open");
-  openButton.addEventListener('click', () => {
-    remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
-      properties: ['openFile'],
-      title: 'open model',
-      defaultPath: '.',
-      filters: [
-          {name: 'gltf', extensions: ['gltf', 'glb', 'vrm', 'vci']},
-      ]
-  }, async (fileNames) => {
-    if(fileNames){
-      await renderer.loadAsync(fileNames[0]);
+
+  const { Menu, MenuItem } = remote;
+  const menu = Menu.getApplicationMenu()!;
+  //const menu = new Menu()
+  for (const menuItem of menu.items) {
+    if (menuItem.label == 'File') {
+      const onClick = () => {
+        remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+          properties: ['openFile'],
+          title: 'open model',
+          defaultPath: '.',
+          filters: [
+            { name: 'gltf', extensions: ['gltf', 'glb', 'vrm', 'vci'] },
+          ]
+        }, async (fileNames) => {
+          if (fileNames) {
+            await renderer.loadAsync(fileNames[0]);
+          }
+        });
+      };
+      const subMenu = (<any>menuItem).submenu;
+      subMenu.insert(0, new MenuItem({ type: 'separator' }))
+      subMenu.insert(0, new MenuItem({
+        label: 'Open', click() {
+          console.log('item 1 clicked');
+          onClick();
+        }
+      }))
     }
-  });
-  });
+  }
+  Menu.setApplicationMenu(menu);
 
   function render(now: number) {
     renderer.onFrame(now * 0.001);

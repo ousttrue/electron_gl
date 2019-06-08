@@ -49,7 +49,7 @@ export class Node {
                         texture.setPixels(gl, img);
                     });
                 }
-                else if (image.bufferView) {
+                else if (image.bufferView != undefined) {
                     const view = value.bufferViews[image.bufferView];
                     let offset = 0;
                     if (view.byteOffset) {

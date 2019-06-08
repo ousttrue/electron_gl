@@ -2,6 +2,7 @@ import { Shader } from './shader'
 import { Texture } from './texture'
 import { Camera } from './camera'
 
+
 export class Material {
     shader: Shader;
     texture: Texture;

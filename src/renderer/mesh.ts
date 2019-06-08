@@ -2,15 +2,18 @@ import { Material } from './material'
 import { VAO } from './vao'
 import { Camera } from './camera'
 import * as cube from '../cube'
+import { Vertices } from './vbo';
 
 
 export class Submesh {
 
+    vao: VAO;
     material: Material;
     offset: number;
     count: number;
 
-    constructor(material: Material, offset: number, count: number) {
+    constructor(vao: VAO, material: Material, offset: number, count: number) {
+        this.vao = vao;
         this.material = material;
         this.offset = offset;
         this.count = count;
@@ -18,49 +21,49 @@ export class Submesh {
 
     release(gl: WebGL2RenderingContext) {
         this.material.release(gl);
+        this.vao.release(gl);
     }
 }
 
 
 export class Mesh {
 
+    vertices: Vertices;
     submeshes: Submesh[] = [];
-    vao: VAO;
 
-    constructor(vao: VAO) {
-        this.vao = vao;
+    constructor()
+    {
+        this.vertices = new Vertices();
     }
 
     release(gl: WebGL2RenderingContext) {
         for (const submesh of this.submeshes) {
             submesh.release(gl);
         }
-
-        this.vao.release(gl);
     }
 
     static createCube(gl: WebGL2RenderingContext, material: Material): Mesh {
-        const vao = new VAO(gl);
-        vao.setData(gl, cube.model);
+        const mesh = new Mesh();
+        mesh.vertices.setData(gl, cube.model);
 
-        const mesh = new Mesh(vao);
-        mesh.submeshes.push(new Submesh(material, 0, cube.model.indices.length));
+        const vao = new VAO(gl);
+        mesh.submeshes.push(new Submesh(vao, material, 0, cube.model.indices.length));
 
         return mesh;
     }
 
     draw(gl: WebGL2RenderingContext, camera: Camera) {
-        this.vao.bind(gl);
 
         for (const submesh of this.submeshes) {
             submesh.material.setupShader(gl, camera);
+            submesh.vao.bindLocation(gl, this.vertices, submesh.material.shader.locationMap);
 
-            if (this.vao.indexBuffer) {
-                this.vao.indexBuffer.drawElements(gl, submesh.offset, submesh.count);
+            if (this.vertices.indexBuffer) {
+                this.vertices.indexBuffer.drawElements(gl, submesh.offset, submesh.count);
             }
             else {
                 // without index buffer
-                this.vao.draw(gl, submesh.offset, submesh.count);
+                this.vertices.draw(gl, submesh.offset, submesh.count);
             }
         }
     }

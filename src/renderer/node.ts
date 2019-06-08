@@ -42,11 +42,9 @@ export class Node {
 
             if (gltf.hasSharedVertexBuffer(gltfMesh)) {
 
-                const vao = new VAO(gl);
                 const data = interfaces.LoadDataToModel(value, gltfMesh, gltfMesh.primitives[0], src.bin);
-                vao.setData(gl, data);
-                vao.bindLocation(gl, shader.locationMap);
-                const mesh = new Mesh(vao);
+                const mesh = new Mesh();
+                mesh.vertices.setData(gl, data);
 
                 for (const gltfPrim of gltfMesh.primitives) {
                     const indexAccessor = value.accessors[gltfPrim.indices];
@@ -55,7 +53,8 @@ export class Node {
                     if (indexAccessor.byteOffset != undefined) {
                         offset = indexAccessor.byteOffset / indexElementSize;
                     }
-                    const submesh = new Submesh(material, offset, indexAccessor.count);
+                    const vao = new VAO(gl);
+                    const submesh = new Submesh(vao, material, offset, indexAccessor.count);
                     mesh.submeshes.push(submesh);
                 }
 
@@ -65,11 +64,9 @@ export class Node {
             else {
                 // each primitive has Mesh
                 for (const gltfPrim of gltfMesh.primitives) {
-                    const vao = new VAO(gl);
                     const data = interfaces.LoadDataToModel(value, gltfMesh, gltfMesh.primitives[0], src.bin);
-                    vao.setData(gl, data);
-                    vao.bindLocation(gl, shader.locationMap);
-                    const mesh = new Mesh(vao);
+                    const mesh = new Mesh();
+                    mesh.vertices.setData(gl, data);
 
                     if (data.indices) {
 
@@ -79,7 +76,8 @@ export class Node {
                         if (indexAccessor.byteOffset != undefined) {
                             offset = indexAccessor.byteOffset / indexElementSize;
                         }
-                        const submesh = new Submesh(material, offset, indexAccessor.count);
+                        const vao = new VAO(gl);
+                        const submesh = new Submesh(vao, material, offset, indexAccessor.count);
                         mesh.submeshes.push(submesh);
 
                     }

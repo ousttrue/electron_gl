@@ -1,5 +1,5 @@
 import { Camera } from './camera'
-import { Node, Mesh } from './node'
+import { Node } from './node'
 import { Shader } from './shader'
 import * as interfaces from '../interfaces'
 

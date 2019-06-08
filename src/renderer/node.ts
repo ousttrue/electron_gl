@@ -138,7 +138,10 @@ export class Node {
                 for (const gltfPrim of gltfMesh.primitives) {
                     const indexAccessor = value.accessors[gltfPrim.indices];
                     const indexElementSize = gltf.getComponentByteSize(indexAccessor.componentType);
-                    const offset = indexAccessor.byteOffset / indexElementSize;
+                    let offset = 0;
+                    if(indexAccessor.byteOffset != undefined){
+                        offset = indexAccessor.byteOffset / indexElementSize;
+                    }
                     const submesh = new Submesh(material, offset, indexAccessor.count);
                     mesh.submeshes.push(submesh);
                 }
@@ -159,7 +162,10 @@ export class Node {
 
                         const indexAccessor = value.accessors[gltfPrim.indices];
                         const indexElementSize = gltf.getComponentByteSize(indexAccessor.componentType);
-                        const offset = indexAccessor.byteOffset / indexElementSize;
+                        let offset = 0;
+                        if(indexAccessor.byteOffset != undefined){
+                            offset = indexAccessor.byteOffset / indexElementSize;
+                        }
                         const submesh = new Submesh(material, offset, indexAccessor.count);
                         mesh.submeshes.push(submesh);
 

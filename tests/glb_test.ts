@@ -103,12 +103,14 @@ describe('gltf primitive has shared buffer ?', () => {
                     attributes: {
                         POSITION: 1,
                     },
+                    material: 0
                 },
                 {
                     indices: 1,
                     attributes: {
                         POSITION: 1,
                     },
+                    material: 0
                 }
             ]
         };

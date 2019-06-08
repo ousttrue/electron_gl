@@ -41,7 +41,7 @@ export class JsonRpcNotify {
 }
 
 function isJsonRpcNotify(value: any): value is JsonRpcNotify{
-    return 'id' !in value && ('method' in value);
+    return !('id' in value) && ('method' in value);
 }
 
 
@@ -102,8 +102,13 @@ export class RPC {
         }
         else if(isJsonRpcNotify(value)){
 
-            // not implemented
-            console.log(value);
+            const method = this.methodMap[value.method];
+            if (!method) {
+                throw "no method: " + value.method;
+            }
+
+            await method(...value.params);
+
             return null;
 
         }

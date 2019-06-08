@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 import fetch from 'node-fetch';
-import { RPC } from "./rpc";
+import { RPC, JsonRpcNotify } from "./rpc";
 import * as interfaces from "./interfaces";
 import * as glb from "./glb";
 import * as fs from "fs";
@@ -10,11 +10,30 @@ import { Gltf } from "./gltf";
 
 let mainWindow: BrowserWindow | null;
 
+let isFirst = true;
+
+const watchPath = path.join(__dirname, 'shaders');
+const vertexShader = fs.readFileSync(path.join(watchPath, 'unlit.vs'), 'utf-8');
+const fragmentShader = fs.readFileSync(path.join(watchPath, 'unlit.fs'), 'utf-8');
+
 const rpc = new RPC();
 ipcMain.on('rpc', async (e: Electron.Event, value: any) => {
   const response = await rpc.dispatchAsync(value);
   if (response) {
     e.sender.send('rpc', response);
+  }
+
+  if (isFirst) {
+    isFirst = false;
+
+    {
+      const notify = new JsonRpcNotify('shaderSource', ['unlit.vs', vertexShader])
+      e.sender.send('rpc', notify);
+    }
+    {
+      const notify = new JsonRpcNotify('shaderSource', ['unlit.fs', fragmentShader])
+      e.sender.send('rpc', notify);
+    }
   }
 });
 
@@ -77,6 +96,7 @@ rpc.methodMap['getModel'] = async function (pathOrUri?: string): Promise<interfa
   }
 }
 
+
 async function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -123,3 +143,19 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+// watch shader files
+fs.watch(watchPath, { recursive: true }, function (event, filename) {
+  if (mainWindow) {
+    {
+      const vertexShader = fs.readFileSync(path.join(watchPath, 'unlit.vs'), 'utf-8');
+      const notify = new JsonRpcNotify('shaderSource', ['unlit.vs', vertexShader])
+      mainWindow.webContents.send('rpc', notify);
+    }
+    {
+      const fragmentShader = fs.readFileSync(path.join(watchPath, 'unlit.fs'), 'utf-8');
+      const notify = new JsonRpcNotify('shaderSource', ['unlit.fs', fragmentShader])
+      mainWindow.webContents.send('rpc', notify);
+    }
+  }
+})

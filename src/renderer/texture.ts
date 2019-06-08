@@ -19,7 +19,7 @@ function loadImageAsync(url: string): Promise<HTMLImageElement> {
 export class Texture {
     texture: WebGLTexture;
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, color?: Uint8Array) {
         this.texture = gl.createTexture()!;
 
         // Because images have to be download over the internet
@@ -27,7 +27,10 @@ export class Texture {
         // Until then put a single pixel in the texture so we can
         // use it immediately. When the image has finished downloading
         // we'll update the texture with the contents of the image.
-        this.setPixels(gl, new Uint8Array([0, 0, 255, 255]));
+        if(!color){
+            color = new Uint8Array([0, 0, 255, 255]);
+        }
+        this.setPixels(gl, color);
     }
 
     setPixels(gl: WebGL2RenderingContext, image: Uint8Array | HTMLImageElement) {

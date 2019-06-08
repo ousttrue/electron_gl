@@ -20,6 +20,7 @@ export interface GltfAsset extends Property {
 export interface GltfPrimitive {
     attributes: { [key: string]: number };
     indices: number;
+    material: number;
 }
 
 
@@ -202,9 +203,9 @@ export interface Gltf {
     bufferViews: GltfBufferView[];
     buffers: GltfBuffer[];
     materials: GltfMaterial[];
-    textures: GltfTexture[];
-    samplers: GltfSampler[];
-    images: GltfImage[];
+    textures?: GltfTexture[];
+    samplers?: GltfSampler[];
+    images?: GltfImage[];
 }
 
 export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array): Float32Array {

@@ -43,33 +43,49 @@ class ShaderLoader {
 
 export class Shader {
     program: WebGLProgram;
+    name: string;
+
+    vs?: string;
+    fs?: string;
+    initialized = false;
+
     projectionMatrix: WebGLUniformLocation = 0;
     modelViewMatrix: WebGLUniformLocation = 0;
     uSampler: WebGLUniformLocation = 0;
-    locationMap: {[semantics: number]: number} = {};
-    _refCount = 1;
+    locationMap: { [semantics: number]: number } = {};
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, name: string) {
         this.program = gl.createProgram()!;
+        this.name = name;
     }
-
-    addRef(){ ++this._refCount;}
 
     release(gl: WebGL2RenderingContext) {
-        --this._refCount;
-        if(this._refCount<=0){
-            gl.deleteProgram(this.program);
-        }
+        gl.deleteProgram(this.program);
     }
 
-    load(gl: WebGL2RenderingContext,
-        vsSource: string,
-        fsSource: string
-    ) {
+    setSource(gl: WebGL2RenderingContext, shaderType: string, source: string) {
+        switch (shaderType) {
+            case "vs":
+                this.vs = source;
+                break;
+
+            case "fs":
+                this.fs = source;
+                break;
+
+            default:
+                console.error(`unknown shaderType: ${shaderType}`)
+                break;
+        }
+
+        if (!this.vs || !this.fs) {
+            return;
+        }
+
         const loader = new ShaderLoader(gl);
         try {
-            loader.loadVertexShader(gl, vsSource);
-            loader.loadFragmentShader(gl, fsSource);
+            loader.loadVertexShader(gl, this.vs);
+            loader.loadFragmentShader(gl, this.fs);
             loader.link(gl, this.program);
             this.projectionMatrix = gl.getUniformLocation(this.program, "uProjectionMatrix")!;
             this.modelViewMatrix = gl.getUniformLocation(this.program, "uModelViewMatrix")!;
@@ -88,13 +104,18 @@ export class Shader {
                 if (location >= 0) this.locationMap[interfaces.Semantics.UV] = location;
             }
 
+            this.initialized = true;
         } finally {
             loader.release(gl);
         }
     }
 
-    use(gl: WebGL2RenderingContext) {
+    use(gl: WebGL2RenderingContext): boolean {
+        if (!this.initialized) {
+            return false;
+        }
         gl.useProgram(this.program);
+        return true;
     }
 
     setTexture(gl: WebGL2RenderingContext, texture: WebGLTexture) {

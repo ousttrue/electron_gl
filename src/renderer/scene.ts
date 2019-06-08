@@ -2,6 +2,7 @@ import { Camera } from './camera'
 import { Node } from './node'
 import { Shader } from './shader'
 import * as interfaces from '../interfaces'
+import { ResourceManager } from './material';
 
 
 function resizeCanvas(canvas: HTMLCanvasElement): boolean {
@@ -36,14 +37,14 @@ export class Scene {
         this.camera.setScreenSize(gl.canvas.clientWidth, gl.canvas.clientHeight);
     }
 
-    loadGltf(gl: WebGL2RenderingContext, data: interfaces.LoadData, shader: Shader)
+    loadGltf(gl: WebGL2RenderingContext, data: interfaces.LoadData, resource: ResourceManager)
     {
         if(this.node){
             // clear
             this.node.release(gl);
             this.node = undefined;
         }
-        this.node = Node.fromGltf(gl, data, shader);
+        this.node = Node.fromGltf(gl, data, resource);
     }
 
     resize(w: number, h: number) {

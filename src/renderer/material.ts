@@ -4,28 +4,43 @@ import { Camera } from './camera'
 import { Gltf, GltfMaterial } from '../gltf'
 
 
+export interface ResourceManager {
+    getShader: (name: string) => Shader;
+
+    getWhiteTexture: () => Texture;
+
+    addTexture: (gltf: Gltf, texture: Texture) => void;
+    releaseTextures: (gltf: Gltf) => void;
+
+    imageFromUriAsync: (uri: string) => Promise<HTMLImageElement>;
+    imageFromBytesAsync: (bytes: Uint8Array) => Promise<HTMLImageElement>;
+}
+
+
 export class Material {
     shader: Shader;
     texture: Texture;
 
-    constructor(gl: WebGL2RenderingContext, shader: Shader) {
+    constructor(shader: Shader, texture: Texture) {
         this.shader = shader;
-        this.texture = new Texture(gl);
+        this.texture = texture;
     }
 
-    release(gl: WebGL2RenderingContext) {
-        this.shader.release(gl);
-        this.texture.release(gl);
-    }
-
-    setupShader(gl: WebGL2RenderingContext, camera: Camera) {
-        this.shader.use(gl);
+    setupShader(gl: WebGL2RenderingContext, camera: Camera): boolean {
+        if (!this.shader.use(gl)) {
+            return false;
+        }
         this.shader.setTexture(gl, this.texture.texture);
         this.shader.setCameraMatrix(gl, camera.projectionMatrix, camera.viewMatrix);
+        return true;
     }
 
-    static fromGltf(gl: WebGL2RenderingContext, gltf: Gltf, src: GltfMaterial): Material
-    {
-        throw new Error('not implemented');
+    static fromGltf(resource: ResourceManager, textures: Texture[], gltf: Gltf, src: GltfMaterial): Material {
+        const shader = resource.getShader("unlit");
+        let texture = src.pbrMetallicRoughness.baseColorTexture
+            ? textures[src.pbrMetallicRoughness.baseColorTexture.index]
+            : resource.getWhiteTexture()
+            ;
+        return new Material(shader, texture);
     }
 }

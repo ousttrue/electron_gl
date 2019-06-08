@@ -20,7 +20,6 @@ export class Submesh {
     }
 
     release(gl: WebGL2RenderingContext) {
-        this.material.release(gl);
         this.vao.release(gl);
     }
 }
@@ -55,7 +54,9 @@ export class Mesh {
     draw(gl: WebGL2RenderingContext, camera: Camera) {
 
         for (const submesh of this.submeshes) {
-            submesh.material.setupShader(gl, camera);
+            if(!submesh.material.setupShader(gl, camera)){
+                continue;
+            }
             submesh.vao.bindLocation(gl, this.vertices, submesh.material.shader.locationMap);
 
             if (this.vertices.indexBuffer) {

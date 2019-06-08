@@ -1,6 +1,6 @@
 import { VAO } from './vao'
-import { Shader } from './shader'
-import { Material } from './material'
+import { Material, ResourceManager } from './material'
+import { Texture } from './texture'
 import { Camera } from './camera'
 import { Mesh, Submesh } from './mesh'
 import * as interfaces from '../interfaces'
@@ -32,11 +32,45 @@ export class Node {
         return node;
     }
 
-    static fromGltf(gl: WebGL2RenderingContext, src: interfaces.LoadData, shader: Shader) {
+    static fromGltf(gl: WebGL2RenderingContext, src: interfaces.LoadData, resource: ResourceManager) {
         const node = new Node();
         const value = <gltf.Gltf>JSON.parse(src.json);
 
-        const material = new Material(gl, shader);
+        const textures: Texture[] = [];
+        if (value.textures && value.images) {
+            for (const gltfTexture of value.textures) {
+                //const sampler = value.samplers[gltfTexture.sampler];
+                const image = value.images[gltfTexture.source];
+                const texture = new Texture(gl);
+                textures.push(texture);
+
+                // if (image.uri) {
+                //     resource.imageFromUriAsync(image.uri).then(img => {
+                //         texture.setPixels(gl, img);
+                //     });
+                // }
+                // else if (image.bufferView) {
+                //     const view = value.bufferViews[image.bufferView];
+                //     let offset = 0;
+                //     if (view.byteOffset) {
+                //         offset = view.byteOffset;
+                //     }
+                //     const bytes = src.bin.subarray(offset, offset + view.byteLength);
+                //     resource.imageFromBytesAsync(bytes).then(img => {
+                //         texture.setPixels(gl, img);
+                //     });
+                // }
+                // else {
+                //     console.error(`no image uri and bufferView`);
+                // }
+            }
+        }
+
+        const materials: Material[] = [];
+        for (const gltfMaterial of value.materials) {
+            const material = Material.fromGltf(resource, textures, value, gltfMaterial);
+            materials.push(material);
+        }
 
         for (const gltfMesh of value.meshes) {
 
@@ -54,7 +88,7 @@ export class Node {
                         offset = indexAccessor.byteOffset / indexElementSize;
                     }
                     const vao = new VAO(gl);
-                    const submesh = new Submesh(vao, material, offset, indexAccessor.count);
+                    const submesh = new Submesh(vao, materials[gltfPrim.material], offset, indexAccessor.count);
                     mesh.submeshes.push(submesh);
                 }
 
@@ -77,7 +111,7 @@ export class Node {
                             offset = indexAccessor.byteOffset / indexElementSize;
                         }
                         const vao = new VAO(gl);
-                        const submesh = new Submesh(vao, material, offset, indexAccessor.count);
+                        const submesh = new Submesh(vao, materials[gltfPrim.material], offset, indexAccessor.count);
                         mesh.submeshes.push(submesh);
 
                     }

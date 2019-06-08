@@ -1,37 +1,31 @@
 import { ipcRenderer, remote } from 'electron'
 import { Scene } from './renderer/scene'
+import { Texture } from './renderer/texture'
 import { RPC } from './rpc';
 import * as interfaces from "./interfaces";
 import { Shader } from './renderer/shader';
+import { Gltf, GltfTexture } from './gltf';
+import { ResourceManager } from './renderer/material';
 
 
-const vsSource = `
-attribute vec4 aVertexPosition;
-attribute vec2 aTextureCoord;
-varying highp vec2 vTextureCoord;
-//attribute vec4 aColorPosition;
-// varying lowp vec4 vColor;
+class GltfResource {
+  textures: Texture[] = [];
+  uriMap: { [uri: string]: Texture } = {}
 
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
+  console() {
 
-void main() {
-  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-  // vColor = aColorPosition;
-  vTextureCoord = aTextureCoord;
+  }
+
+  release(gl: WebGL2RenderingContext) {
+    for (const texture of this.textures) {
+      texture.release(gl);
+    }
+  }
+
+  async getTexture(gl: WebGL2RenderingContext, uri: string) {
+
+  }
 }
-`;
-
-const fsSource = `
-// varying lowp vec4 vColor;
-varying highp vec2 vTextureCoord;
-uniform sampler2D uSampler;
-
-void main(void) {
-  //gl_FragColor = vColor;
-  gl_FragColor = texture2D(uSampler, vTextureCoord);
-}
-`;
 
 
 class Renderer {
@@ -42,13 +36,28 @@ class Renderer {
   mouseX = 0;
   mouseY = 0;
 
-  shader: Shader;
+  whiteTexture: Texture;
+
+  shaderMap: { [key: string]: Shader } = {
+  }
+  gltfList: Gltf[] = [];
+  resourceMap: { [key: number]: GltfResource } = {
+  }
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
+    this.whiteTexture = new Texture(gl, new Uint8Array([255, 255, 255, 255]));
     this.scene = new Scene(gl);
-    this.shader = new Shader(gl);
-    this.shader.load(gl, vsSource, fsSource);
+
+    this.rpc.methodMap['shaderSource'] = async (name: string, source: string) => {
+      console.log('shaderSource');
+
+      const key = name.substring(0, name.length-3);
+      const shaderType = name.substring(name.length-2);
+
+      let shader = this.getShader(key);
+      shader.setSource(this.gl, shaderType, source);
+    }
 
     gl.canvas.addEventListener('pointerdown', e => this.onMouseDown(gl.canvas, e));
     gl.canvas.addEventListener('pointerup', e => this.onMouseUp(gl.canvas, e));
@@ -62,6 +71,55 @@ class Renderer {
       }
     });
     this.startAsync();
+  }
+
+  getShader(name: string): Shader {
+    let source = this.shaderMap[name];
+    if (!source) {
+      source = new Shader(this.gl, name);
+      this.shaderMap[name] = source;
+    }
+    return source;
+  }
+
+  getIndex(gltf: Gltf) {
+    for (let i = 0; i < this.gltfList.length; ++i) {
+      if (this.gltfList[i] == gltf) {
+        return i;
+      }
+    }
+    throw new Error('gltf not found');
+  }
+
+  addTexture(gltf: Gltf, texture: Texture) {
+    const index = this.getIndex(gltf);
+    let resource = this.resourceMap[index];
+    if (resource == null) {
+      resource = new GltfResource();
+      this.resourceMap[index] = resource;
+    }
+    resource.textures.push(texture);
+  }
+
+  releaseTextures(gltf: Gltf) {
+    const index = this.getIndex(gltf);
+    let resource = this.resourceMap[index];
+    resource.release(this.gl);
+    delete this.resourceMap[index];
+  }
+
+  getWhiteTexture(): Texture {
+    return this.whiteTexture;
+  }
+
+  async imageFromUriAsync(uri: string): Promise<HTMLImageElement> {
+    const image = new Image();
+    return image;
+  }
+
+  async imageFromBytesAsync(bytes: Uint8Array): Promise<HTMLImageElement> {
+    const image = new Image();
+    return image;
   }
 
   onMouseDown(canvas: HTMLCanvasElement, e: PointerEvent) {
@@ -106,8 +164,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
-    this.shader.addRef();
-    this.scene.loadGltf(this.gl, data, this.shader);
+    this.scene.loadGltf(this.gl, data, this);
   }
 
   async loadAsync(path: string) {
@@ -115,8 +172,7 @@ class Renderer {
     ipcRenderer.send('rpc', request[0]);
     const data: interfaces.LoadData = await request[1];
 
-    this.shader.addRef();
-    this.scene.loadGltf(this.gl, data, this.shader);
+    this.scene.loadGltf(this.gl, data, this);
   }
 
   onFrame(nowSeconds: number) {

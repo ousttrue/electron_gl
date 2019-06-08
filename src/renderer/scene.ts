@@ -41,6 +41,7 @@ export class Scene {
         if(this.node){
             // clear
             this.node.release(gl);
+            this.node = undefined;
         }
         this.node = Node.fromGltf(gl, data, shader);
     }

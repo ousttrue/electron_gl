@@ -13,7 +13,7 @@ export interface ResourceManager {
     releaseTextures: (gltf: Gltf) => void;
 
     imageFromUriAsync: (uri: string) => Promise<HTMLImageElement>;
-    imageFromBytesAsync: (bytes: Uint8Array) => Promise<HTMLImageElement>;
+    imageFromBytesAsync: (mime: string, bytes: Uint8Array) => Promise<HTMLImageElement>;
 }
 
 

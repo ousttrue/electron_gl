@@ -13,7 +13,7 @@ export class VAO {
     gl.deleteVertexArray(this.vao);
   }
 
-  bindLocation(gl: WebGL2RenderingContext, vertices: Vertices, locationMap: { [semantics: number]: number }) {
+  bindLocation(gl: WebGL2RenderingContext, vertices: Vertices, locationMap: { [semantics: string]: number }) {
     // bind VAO
     gl.bindVertexArray(this.vao);
     if (!this.bound) {

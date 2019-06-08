@@ -3,7 +3,9 @@
 WebGL practice.
 
 * typescript
-* webgl2
+* WebGL2
+
+![duck](./duck.jpg)
 
 ## ToDo
 
@@ -11,11 +13,16 @@ WebGL practice.
 * [x] file open dialog
 * [x] gltf buffer manager
 * [x] open to electron menu
-* [x] shader refcount
+* gizmo
+  * [ ] bounding box
+  * [ ] axis
+  * [ ] grid
 * [ ] camera position when load
 * [x] submesh
-* [ ] material
-* [ ] shader manager
-    * [ ] unlit
-    * [ ] PBR
-* [ ] first data, then load
+* [x] material
+* [x] shader manager
+  * [x] unlit
+  * [ ] PBR
+* [ ] gltf id management in main thread
+* [x] UV attribute
+* [ ] first data, then load. separate scene graph with renderer resource

@@ -1,5 +1,6 @@
 import { mat4 } from "gl-matrix";
 import * as interfaces from "../interfaces";
+import { GltfVertexAttributeSemantics } from '../gltf'
 
 
 class ShaderLoader {
@@ -41,6 +42,15 @@ class ShaderLoader {
     }
 }
 
+
+const attributeMap: { [key: string]: string } =
+{
+    "aVertexPosition": GltfVertexAttributeSemantics.POSITION,
+    "aColorPosition": GltfVertexAttributeSemantics.COLOR0,
+    "aTextureCoord": GltfVertexAttributeSemantics.UV0,
+};
+
+
 export class Shader {
     program: WebGLProgram;
     name: string;
@@ -52,7 +62,7 @@ export class Shader {
     projectionMatrix: WebGLUniformLocation = 0;
     modelViewMatrix: WebGLUniformLocation = 0;
     uSampler: WebGLUniformLocation = 0;
-    locationMap: { [semantics: number]: number } = {};
+    locationMap: { [semantics: string]: number } = {};
 
     constructor(gl: WebGL2RenderingContext, name: string) {
         this.program = gl.createProgram()!;
@@ -91,17 +101,10 @@ export class Shader {
             this.modelViewMatrix = gl.getUniformLocation(this.program, "uModelViewMatrix")!;
             this.uSampler = gl.getUniformLocation(this.program, 'uSampler')!;
 
-            {
-                const location = gl.getAttribLocation(this.program, "aVertexPosition");
-                if (location >= 0) this.locationMap[interfaces.Semantics.POSITION] = location;
-            }
-            {
-                const location = gl.getAttribLocation(this.program, "aColorPosition");
-                if (location >= 0) this.locationMap[interfaces.Semantics.COLOR] = location;
-            }
-            {
-                const location = gl.getAttribLocation(this.program, 'aTextureCoord');
-                if (location >= 0) this.locationMap[interfaces.Semantics.UV] = location;
+            for (const key in attributeMap) {
+                const location = gl.getAttribLocation(this.program, key);
+                const semantic = attributeMap[key];
+                if (location >= 0) this.locationMap[semantic] = location;
             }
 
             this.initialized = true;

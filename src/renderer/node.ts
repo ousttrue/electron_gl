@@ -44,25 +44,25 @@ export class Node {
                 const texture = new Texture(gl);
                 textures.push(texture);
 
-                // if (image.uri) {
-                //     resource.imageFromUriAsync(image.uri).then(img => {
-                //         texture.setPixels(gl, img);
-                //     });
-                // }
-                // else if (image.bufferView) {
-                //     const view = value.bufferViews[image.bufferView];
-                //     let offset = 0;
-                //     if (view.byteOffset) {
-                //         offset = view.byteOffset;
-                //     }
-                //     const bytes = src.bin.subarray(offset, offset + view.byteLength);
-                //     resource.imageFromBytesAsync(bytes).then(img => {
-                //         texture.setPixels(gl, img);
-                //     });
-                // }
-                // else {
-                //     console.error(`no image uri and bufferView`);
-                // }
+                if (image.uri) {
+                    resource.imageFromUriAsync(image.uri).then(img => {
+                        texture.setPixels(gl, img);
+                    });
+                }
+                else if (image.bufferView) {
+                    const view = value.bufferViews[image.bufferView];
+                    let offset = 0;
+                    if (view.byteOffset) {
+                        offset = view.byteOffset;
+                    }
+                    const bytes = src.bin.subarray(offset, offset + view.byteLength);
+                    resource.imageFromBytesAsync(image.mimeType, bytes).then(img => {
+                        texture.setPixels(gl, img);
+                    });
+                }
+                else {
+                    console.error(`no image uri and bufferView`);
+                }
             }
         }
 

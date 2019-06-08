@@ -73,7 +73,7 @@ export class VBO {
 // VBOを束ねて描画す呼び出しを制御する
 export class Vertices {
     indexBuffer?: VBO;
-    vertexAttributes: { [semantics: number]: VBO } = [];
+    vertexAttributes: { [key: string]: VBO } = {};
 
     release(gl: WebGL2RenderingContext) {
         if (this.indexBuffer) {

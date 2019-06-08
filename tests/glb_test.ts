@@ -57,9 +57,9 @@ describe('glb parser', () => {
             assert.equal(0, model.indices[0]);
             assert.equal(1, model.indices[1]);
             assert.equal(2, model.indices[2]);
-            expect(model.vertices[interfaces.Semantics.POSITION].values[0]).to.be.closeTo(-23.93640, 1e-5); // x
-            expect(model.vertices[interfaces.Semantics.POSITION].values[1]).to.be.closeTo(11.53530, 1e-5); // x
-            expect(model.vertices[interfaces.Semantics.POSITION].values[2]).to.be.closeTo(30.61250, 1e-5); // x
+            expect(model.vertices[gltf.GltfVertexAttributeSemantics.POSITION].values[0]).to.be.closeTo(-23.93640, 1e-5); // x
+            expect(model.vertices[gltf.GltfVertexAttributeSemantics.POSITION].values[1]).to.be.closeTo(11.53530, 1e-5); // x
+            expect(model.vertices[gltf.GltfVertexAttributeSemantics.POSITION].values[2]).to.be.closeTo(30.61250, 1e-5); // x
         }
     });
 })

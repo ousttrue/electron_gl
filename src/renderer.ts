@@ -52,8 +52,8 @@ class Renderer {
     this.rpc.methodMap['shaderSource'] = async (name: string, source: string) => {
       console.log('shaderSource');
 
-      const key = name.substring(0, name.length-3);
-      const shaderType = name.substring(name.length-2);
+      const key = name.substring(0, name.length - 3);
+      const shaderType = name.substring(name.length - 2);
 
       let shader = this.getShader(key);
       shader.setSource(this.gl, shaderType, source);
@@ -117,9 +117,16 @@ class Renderer {
     return image;
   }
 
-  async imageFromBytesAsync(bytes: Uint8Array): Promise<HTMLImageElement> {
-    const image = new Image();
-    return image;
+  async imageFromBytesAsync(mime: string, bytes: Uint8Array): Promise<HTMLImageElement> {
+    const promise = new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = function () {
+        resolve(image);
+      };
+      const blob = new Blob([bytes], { type: mime });
+      image.src = window.URL.createObjectURL(blob);
+    });
+    return <Promise<HTMLImageElement>>promise;
   }
 
   onMouseDown(canvas: HTMLCanvasElement, e: PointerEvent) {

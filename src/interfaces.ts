@@ -4,7 +4,7 @@ import * as gltf from './gltf';
 
 export interface LoadData {
     // gltf or glb url
-    url: string; 
+    url: string;
 
     // gltf json
     json: string;
@@ -18,28 +18,26 @@ export interface VertexAttribute {
     values: Float32Array;
 }
 
-export enum Semantics {
-    POSITION = 0,
-    NORMAL = 1,
-    UV = 2,
-    COLOR = 3,
-}
-
 export interface Model {
-    indices: Uint16Array|Uint32Array,
-    vertices: { [semantics: number]: VertexAttribute },
+    indices: Uint16Array | Uint32Array,
+    vertices: { [semantics: string]: VertexAttribute },
 }
 
-export function LoadDataToModel(value: gltf.Gltf, mesh: gltf.GltfMesh, prim: gltf.GltfPrimitive, bin: Uint8Array): Model
-{
-    const vertices: {[semantics: number]: VertexAttribute} = {}
-    vertices[Semantics.POSITION] = {
-      elementCount: 3,
-      values: gltf.getFloatArray(value, prim.attributes['POSITION'], bin)
+export function LoadDataToModel(value: gltf.Gltf, mesh: gltf.GltfMesh, prim: gltf.GltfPrimitive, bin: Uint8Array): Model {
+    const vertices: { [semantics: string]: VertexAttribute } = {}
+
+    for (const key in prim.attributes) {
+        const attrib = prim.attributes[key];
+        const accessor = value.accessors[attrib];
+        vertices[key] = {
+            elementCount: gltf.getComponentCount(accessor.type),
+            values: gltf.getFloatArray(value, attrib, bin)
+        }
     }
+
     const model: Model = {
-      indices: gltf.getIndices(value, prim, bin),
-      vertices: vertices,
+        indices: gltf.getIndices(value, prim, bin),
+        vertices: vertices,
     }
     return model;
 }

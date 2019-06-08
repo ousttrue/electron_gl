@@ -17,6 +17,27 @@ export interface GltfAsset extends Property {
     copyright?: string;
 }
 
+export enum GltfVertexAttributeSemantics {
+    POSITION = 'POSITION', // 3
+    NORMAL = 'NORMAL', // 3
+    TANGENT = 'TANGENT', // 4
+    UV0 = 'TEXCOORD_0', // 2
+    UV1 = 'TEXCOORD_1', // 2
+    COLOR0 = 'COLOR_0', // 3 or 4
+    JOINTS0 = 'JOINTS_0', // 4
+    WEIGHTS0 = 'WEIGHTS_0', // 4
+}
+
+// export const GltfSemanticElementCountMap: { [semantic: string]: number } = {}
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.Position] = 3;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.Normal] = 3;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.Tangent] = 4;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.UV0] = 2;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.UV1] = 2;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.COLOR0] = 4;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.JOINTS0] = 4;
+// GltfSemanticElementCountMap[GltfVertexAttributeSemantics.WEIGHTS0] = 4;
+
 export interface GltfPrimitive {
     attributes: { [key: string]: number };
     indices: number;
@@ -116,9 +137,9 @@ export interface GltfBuffer extends ChildOfRootProperty {
 }
 
 export enum GltfAlphaMode {
-    Opaque = 'OPAQUE',
-    Mask = 'MASK',
-    Blend = 'BLEND',
+    OPAQUE = 'OPAQUE',
+    MASK = 'MASK',
+    BLEND = 'BLEND',
 }
 
 export interface GltfTextureInfo {
@@ -186,8 +207,8 @@ export interface GltfSampler extends ChildOfRootProperty {
 }
 
 export enum GltfMimeType {
-    Jpeg = 'image/jpeg',
-    Png = 'image/png',
+    JPEG = 'image/jpeg',
+    PNG = 'image/png',
 }
 
 export interface GltfImage extends ChildOfRootProperty {

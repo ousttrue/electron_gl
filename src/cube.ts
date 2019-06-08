@@ -1,4 +1,5 @@
 import * as interfaces from "./interfaces"
+import { GltfVertexAttributeSemantics } from "./gltf";
 
 
 const indicdes = [
@@ -105,15 +106,15 @@ export const model: interfaces.Model = {
     }
 }
 
-model.vertices[interfaces.Semantics.POSITION] = {
+model.vertices[GltfVertexAttributeSemantics.POSITION] = {
     elementCount: 3,
     values: new Float32Array(positions)
 }
-model.vertices[interfaces.Semantics.UV] = {
+model.vertices[GltfVertexAttributeSemantics.UV0] = {
     elementCount: 2,
     values: new Float32Array(uv)
 }
-model.vertices[interfaces.Semantics.COLOR] = {
+model.vertices[GltfVertexAttributeSemantics.COLOR0] = {
     elementCount: 4,
     values: new Float32Array(colors)
 }

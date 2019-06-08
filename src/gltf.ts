@@ -35,10 +35,8 @@ export enum ComponentType {
 }
 
 
-export function getComponentByteSize(componentTye: ComponentType)
-{
-    switch(componentTye)
-    {
+export function getComponentByteSize(componentTye: ComponentType) {
+    switch (componentTye) {
         case ComponentType.UNSIGNED_SHORT:
             return 2;
 
@@ -125,14 +123,21 @@ export interface Gltf {
 export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array): Float32Array {
     const accessor = gltf.accessors[accessorIndex];
     const view = gltf.bufferViews[accessor.bufferView];
-    const segment = bin.subarray(view.byteOffset, view.byteOffset + view.byteLength);
+    let offset = 0;
+    if (view.byteOffset != undefined) {
+        offset = view.byteOffset;
+    }
+    const segment = bin.subarray(offset, offset + view.byteLength);
 
     if (accessor.componentType != ComponentType.FLOAT) {
         throw new Error(`attribute componentType is not FLOAT: ${accessor.componentType}`)
     }
 
     const componentCount = getComponentCount(accessor.type);
-    const begin = accessor.byteOffset / 4;
+    let begin = 0;
+    if (accessor.byteOffset != undefined) {
+        begin = accessor.byteOffset / 4;
+    }
     return new Float32Array(segment.buffer, segment.byteOffset, segment.byteLength / 4).subarray(begin, begin + accessor.count * componentCount);
 }
 
@@ -142,18 +147,26 @@ export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16
         throw new Error(`${accessor.type} is not SCALAR`);
     }
     const view = gltf.bufferViews[accessor.bufferView];
-    const segment = bin.subarray(view.byteOffset, view.byteOffset + view.byteLength);
-
+    let offset = 0;
+    if (view.byteOffset != undefined) {
+        offset = view.byteOffset;
+    }
+    const segment = bin.subarray(offset, offset + view.byteLength);
+    let begin = 0;
     switch (accessor.componentType) {
         case ComponentType.UNSIGNED_SHORT:
             {
-                const begin = accessor.byteOffset / 2;
+                if (accessor.byteOffset != undefined) {
+                    begin = accessor.byteOffset / 2;
+                }
                 return new Uint16Array(segment.buffer, segment.byteOffset, segment.byteLength / 2).subarray(begin, begin + accessor.count);
             }
 
         case ComponentType.UNSIGNED_INT:
             {
-                const begin = accessor.byteOffset / 4;
+                if (accessor.byteOffset != undefined) {
+                    begin = accessor.byteOffset / 4;
+                }
                 return new Uint32Array(segment.buffer, segment.byteOffset, segment.byteLength / 4).subarray(begin, begin + accessor.count);
             }
 
@@ -169,22 +182,20 @@ export function hasSharedVertexBuffer(mesh: Mesh): boolean {
 
     const first = mesh.primitives[0].attributes;
 
-    for(let i=1; i<mesh.primitives.length; ++i)
-    {
+    for (let i = 1; i < mesh.primitives.length; ++i) {
         const current = mesh.primitives[i].attributes;
 
-        if(first.length!=current.length){
+        if (first.length != current.length) {
             //console.debug(`${first.length} != ${current.length}`);
             return false;
         }
 
-        for(let key in first)
-        {
-            if(!(key in current)){
+        for (let key in first) {
+            if (!(key in current)) {
                 //console.debug(`${key} !in ${current}`);
                 return false;
             }
-            if(first[key]!=current[key]){
+            if (first[key] != current[key]) {
                 //console.debug(`${key}: ${first[key]} != ${current[key]}`);
                 return false;
             }

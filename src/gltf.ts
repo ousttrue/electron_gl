@@ -1,3 +1,5 @@
+import { WritableOptions } from "stream";
+
 // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md
 
 interface Property {
@@ -9,23 +11,23 @@ interface ChildOfRootProperty extends Property {
     name?: string;
 }
 
-export interface Asset extends Property {
+export interface GltfAsset extends Property {
     version: string; // "2.0"
     generator?: string;
     copyright?: string;
 }
 
-export interface Primitive {
+export interface GltfPrimitive {
     attributes: { [key: string]: number };
     indices: number;
 }
 
 
-export interface Mesh extends ChildOfRootProperty {
-    primitives: Primitive[]
+export interface GltfMesh extends ChildOfRootProperty {
+    primitives: GltfPrimitive[]
 }
 
-export enum ComponentType {
+export enum GltfComponentType {
     BYTE = 5120,
     UNSIGNED_BYTE = 5121,
     SHORT = 5122,
@@ -35,12 +37,12 @@ export enum ComponentType {
 }
 
 
-export function getComponentByteSize(componentTye: ComponentType) {
+export function getComponentByteSize(componentTye: GltfComponentType) {
     switch (componentTye) {
-        case ComponentType.UNSIGNED_SHORT:
+        case GltfComponentType.UNSIGNED_SHORT:
             return 2;
 
-        case ComponentType.UNSIGNED_INT:
+        case GltfComponentType.UNSIGNED_INT:
             return 4;
 
         default:
@@ -49,7 +51,7 @@ export function getComponentByteSize(componentTye: ComponentType) {
 }
 
 
-export enum ValueType {
+export enum GltfValueType {
     SCALAR = 'SCALAR',
     VEC2 = 'VEC2',
     VEC3 = 'VEC3',
@@ -59,25 +61,25 @@ export enum ValueType {
     MAT4 = 'MAT4',
 }
 
-export function getComponentCount(type: ValueType) {
+export function getComponentCount(type: GltfValueType) {
     switch (type) {
-        case ValueType.SCALAR:
+        case GltfValueType.SCALAR:
             return 1;
 
-        case ValueType.VEC2:
+        case GltfValueType.VEC2:
             return 2;
 
-        case ValueType.VEC3:
+        case GltfValueType.VEC3:
             return 3;
 
-        case ValueType.VEC4:
-        case ValueType.MAT2:
+        case GltfValueType.VEC4:
+        case GltfValueType.MAT2:
             return 4;
 
-        case ValueType.MAT3:
+        case GltfValueType.MAT3:
             return 9;
 
-        case ValueType.MAT4:
+        case GltfValueType.MAT4:
             return 16;
 
         default:
@@ -85,39 +87,124 @@ export function getComponentCount(type: ValueType) {
     }
 }
 
-export interface Accessor extends ChildOfRootProperty {
+export interface GltfAccessor extends ChildOfRootProperty {
     bufferView: number;
-    byteOffset: number;
-    componentType: ComponentType;
+    byteOffset?: number;
+    componentType: GltfComponentType;
     count: number;
-    max: number[];
-    min: number[];
-    type: ValueType;
+    max?: number[];
+    min?: number[];
+    type: GltfValueType;
 }
 
-export enum BufferViewTarget {
+export enum GltfBufferViewTarget {
     ARRAY_BUFFER = 34962,
     ELEMENT_ARRAY_BUFFER = 34963,
 }
 
-export interface BufferView extends ChildOfRootProperty {
+export interface GltfBufferView extends ChildOfRootProperty {
     buffer: number;
-    byteOffset: number;
+    byteOffset?: number;
     byteLength: number;
-    target: BufferViewTarget;
+    target?: GltfBufferViewTarget;
 }
 
-export interface Buffer extends ChildOfRootProperty {
+export interface GltfBuffer extends ChildOfRootProperty {
     uri?: string;
     byteLength: number;
 }
 
+export enum GltfAlphaMode {
+    Opaque = 'OPAQUE',
+    Mask = 'MASK',
+    Blend = 'BLEND',
+}
+
+export interface GltfTextureInfo {
+    index: number;
+    texCoord?: number; // TEXCOORD_0, TEXCOORD_1, ...
+}
+
+export interface GltfPbrMetallicRoughness {
+    baseColorFactor: [number, number, number, number]; // default: [1, 1, 1, 1]
+    baseColorTexture?: GltfTextureInfo;
+    metallicFactor: number; // default: 1
+    roughnessFactor: number; // default: 1
+    metallicRoughnessTexture?: GltfTextureInfo;
+}
+
+export interface GltfNormalTexture extends GltfTextureInfo {
+    scale: number; // default: 1.0
+}
+
+export interface GltfOcclusionTexture extends GltfTextureInfo {
+    strength: number; // default: 1.0
+}
+
+export interface GltfMaterial extends ChildOfRootProperty {
+    pbrMetallicRoughness: GltfPbrMetallicRoughness;
+    normalTexture?: GltfNormalTexture;
+    occlusionTexture?: GltfOcclusionTexture;
+    emissiveTexture?: GltfTextureInfo;
+    emissiveFactor: [number, number, number]; // default: [0, 0, 0]
+    alphaMode: GltfAlphaMode; // default: Opaque
+    alphaCutoff: number; // default: 0.5
+    doubleSided: boolean; // default: false
+}
+
+export interface GltfTexture extends ChildOfRootProperty {
+    sampler: number;
+    source: number;
+}
+
+export enum GltfMagFilter {
+    NEAREST = 9728,
+    LINEAR = 9729,
+}
+
+export enum GltfMinFilter {
+    NEAREST = 9728,
+    LINEAR = 9729,
+    NEAREST_MIPMAP_NEAREST = 9984,
+    LINEAR_MIPMAP_NEAREST = 9985,
+    NEAREST_MIPMAP_LINEAR = 9986,
+    LINEAR_MIPMAP_LINEAR = 9987,
+}
+
+export enum GltfWrapMode {
+    CLAMP_TO_EDGE = 33071,
+    MIRRORED_REPEAT = 33648,
+    REPEAT = 10497,
+}
+
+export interface GltfSampler extends ChildOfRootProperty {
+    magFilter: GltfMagFilter; //
+    minFilter: GltfMinFilter;
+    wrapS: GltfWrapMode; // default: REPEAT
+    wrapT: GltfWrapMode; // default: REPEAT
+}
+
+export enum GltfMimeType {
+    Jpeg = 'image/jpeg',
+    Png = 'image/png',
+}
+
+export interface GltfImage extends ChildOfRootProperty {
+    uri?: string;
+    mimeType: GltfMimeType;
+    bufferView?: number;
+}
+
 export interface Gltf {
-    asset: Asset;
-    meshes: Mesh[];
-    accessors: Accessor[];
-    bufferViews: BufferView[];
-    buffers: Buffer[];
+    asset: GltfAsset;
+    meshes: GltfMesh[];
+    accessors: GltfAccessor[];
+    bufferViews: GltfBufferView[];
+    buffers: GltfBuffer[];
+    materials: GltfMaterial[];
+    textures: GltfTexture[];
+    samplers: GltfSampler[];
+    images: GltfImage[];
 }
 
 export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array): Float32Array {
@@ -129,7 +216,7 @@ export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array
     }
     const segment = bin.subarray(offset, offset + view.byteLength);
 
-    if (accessor.componentType != ComponentType.FLOAT) {
+    if (accessor.componentType != GltfComponentType.FLOAT) {
         throw new Error(`attribute componentType is not FLOAT: ${accessor.componentType}`)
     }
 
@@ -141,9 +228,9 @@ export function getFloatArray(gltf: Gltf, accessorIndex: number, bin: Uint8Array
     return new Float32Array(segment.buffer, segment.byteOffset, segment.byteLength / 4).subarray(begin, begin + accessor.count * componentCount);
 }
 
-export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16Array | Uint32Array {
+export function getIndices(gltf: Gltf, prim: GltfPrimitive, bin: Uint8Array): Uint16Array | Uint32Array {
     const accessor = gltf.accessors[prim.indices];
-    if (accessor.type != ValueType.SCALAR) {
+    if (accessor.type != GltfValueType.SCALAR) {
         throw new Error(`${accessor.type} is not SCALAR`);
     }
     const view = gltf.bufferViews[accessor.bufferView];
@@ -154,7 +241,7 @@ export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16
     const segment = bin.subarray(offset, offset + view.byteLength);
     let begin = 0;
     switch (accessor.componentType) {
-        case ComponentType.UNSIGNED_SHORT:
+        case GltfComponentType.UNSIGNED_SHORT:
             {
                 if (accessor.byteOffset != undefined) {
                     begin = accessor.byteOffset / 2;
@@ -162,7 +249,7 @@ export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16
                 return new Uint16Array(segment.buffer, segment.byteOffset, segment.byteLength / 2).subarray(begin, begin + accessor.count);
             }
 
-        case ComponentType.UNSIGNED_INT:
+        case GltfComponentType.UNSIGNED_INT:
             {
                 if (accessor.byteOffset != undefined) {
                     begin = accessor.byteOffset / 4;
@@ -175,7 +262,7 @@ export function getIndices(gltf: Gltf, prim: Primitive, bin: Uint8Array): Uint16
     }
 }
 
-export function hasSharedVertexBuffer(mesh: Mesh): boolean {
+export function hasSharedVertexBuffer(mesh: GltfMesh): boolean {
     if (mesh.primitives.length <= 1) {
         return true;
     }

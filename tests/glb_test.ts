@@ -36,8 +36,8 @@ describe('glb parser', () => {
 
         {
             const index_accessor = gltf_value.accessors[0];
-            assert.equal(index_accessor.componentType, gltf.ComponentType.UNSIGNED_SHORT);
-            assert.equal(index_accessor.type, gltf.ValueType.SCALAR);
+            assert.equal(index_accessor.componentType, gltf.GltfComponentType.UNSIGNED_SHORT);
+            assert.equal(index_accessor.type, gltf.GltfValueType.SCALAR);
 
             const buffer_view = gltf_value.bufferViews[0];
 
@@ -96,7 +96,7 @@ describe('gltf primitive has shared buffer ?', () => {
     });
 
     it('shared', () => {
-        const mesh: gltf.Mesh = {
+        const mesh: gltf.GltfMesh = {
             primitives: [
                 {
                     indices: 0,

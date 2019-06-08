@@ -1,6 +1,7 @@
 import { Shader } from './shader'
 import { Texture } from './texture'
 import { Camera } from './camera'
+import { Gltf, GltfMaterial } from '../gltf'
 
 
 export class Material {
@@ -21,5 +22,10 @@ export class Material {
         this.shader.use(gl);
         this.shader.setTexture(gl, this.texture.texture);
         this.shader.setCameraMatrix(gl, camera.projectionMatrix, camera.viewMatrix);
+    }
+
+    static fromGltf(gl: WebGL2RenderingContext, gltf: Gltf, src: GltfMaterial): Material
+    {
+        throw new Error('not implemented');
     }
 }

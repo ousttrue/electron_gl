@@ -30,7 +30,7 @@ export interface Model {
     vertices: { [semantics: number]: VertexAttribute },
 }
 
-export function LoadDataToModel(value: gltf.Gltf, mesh: gltf.Mesh, prim: gltf.Primitive, bin: Uint8Array): Model
+export function LoadDataToModel(value: gltf.Gltf, mesh: gltf.GltfMesh, prim: gltf.GltfPrimitive, bin: Uint8Array): Model
 {
     const vertices: {[semantics: number]: VertexAttribute} = {}
     vertices[Semantics.POSITION] = {

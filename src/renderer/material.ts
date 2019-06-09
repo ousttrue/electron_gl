@@ -5,7 +5,7 @@ import { Gltf, GltfMaterial } from '../gltf'
 
 
 export interface ResourceManager {
-    getShader: (name: string) => Shader;
+    getShader: (name?: string) => Shader;
 
     getWhiteTexture: () => Texture;
 
@@ -36,7 +36,7 @@ export class Material {
     }
 
     static fromGltf(resource: ResourceManager, textures: Texture[], gltf: Gltf, src: GltfMaterial): Material {
-        const shader = resource.getShader("unlit");
+        const shader = resource.getShader();
         let texture = src.pbrMetallicRoughness.baseColorTexture
             ? textures[src.pbrMetallicRoughness.baseColorTexture.index]
             : resource.getWhiteTexture()

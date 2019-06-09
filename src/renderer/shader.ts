@@ -1,6 +1,7 @@
 import { mat4 } from "gl-matrix";
 import * as interfaces from "../interfaces";
 import { GltfVertexAttributeSemantics } from '../gltf'
+import { timingSafeEqual } from "crypto";
 
 
 class ShaderLoader {
@@ -71,6 +72,7 @@ export class Shader {
 
     release(gl: WebGL2RenderingContext) {
         gl.deleteProgram(this.program);
+        this.initialized = false;
     }
 
     setSource(gl: WebGL2RenderingContext, shaderType: string, source: string) {
@@ -90,6 +92,11 @@ export class Shader {
 
         if (!this.vs || !this.fs) {
             return;
+        }
+        if(this.initialized){
+            console.info(`clear shader: ${this.name}`);
+            this.release(gl);
+            this.program = gl.createProgram()!;
         }
 
         const loader = new ShaderLoader(gl);

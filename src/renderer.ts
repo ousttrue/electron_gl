@@ -4,8 +4,7 @@ import { Texture } from './renderer/texture'
 import { RPC } from './rpc';
 import * as interfaces from "./interfaces";
 import { Shader } from './renderer/shader';
-import { Gltf, GltfTexture } from './gltf';
-import { ResourceManager } from './renderer/material';
+import { Gltf } from './gltf';
 
 
 class GltfResource {
@@ -50,7 +49,7 @@ class Renderer {
     this.scene = new Scene(gl);
 
     this.rpc.methodMap['shaderSource'] = async (name: string, source: string) => {
-      console.log('shaderSource');
+      console.log(`shaderSource: ${name}: ${source}`);
 
       const key = name.substring(0, name.length - 3);
       const shaderType = name.substring(name.length - 2);
@@ -73,7 +72,10 @@ class Renderer {
     this.startAsync();
   }
 
-  getShader(name: string): Shader {
+  getShader(name?: string): Shader {
+    if(!name){
+      name = "custom";
+    }
     let source = this.shaderMap[name];
     if (!source) {
       source = new Shader(this.gl, name);

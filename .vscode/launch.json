@@ -13,7 +13,6 @@
             "env": {
                 "ELECTRON_ENABLE_LOGGING": "1",
             },
-            "preLaunchTask": "build"
         },
         {
             "type": "chrome",
